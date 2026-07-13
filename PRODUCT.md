@@ -1,7 +1,8 @@
 # Product
 
-> **RASCUNHO** — pré-preenchido a partir dos materiais da Aline. Confirmar e
-> completar com ela numa entrevista curta antes de construir (ver CLAUDE.md).
+> Fechado a partir dos materiais da Aline (`materials/`) + decisões do Silas em
+> 13/07/2026. Os furos que faltavam (CRP, canal de contato, política de preço)
+> estão resolvidos abaixo. O que ainda falta é opcional — ver "Pendências".
 
 ## Register
 
@@ -28,16 +29,35 @@ Sucesso = o visitante confia, se identifica e dá o passo de **entrar em contato
 / agendar** (ou seguir no Instagram).
 
 ## Conversion & proof
-- Primary CTA: **"Vamos conversar?"** (contato / agendamento — WhatsApp, e-mail
-  ou formulário; confirmar canal preferido com ela).
-- Secondary: seguir no **Instagram** (conteúdo de bem-estar).
+
+- **CTA primário: "Vamos conversar?" → WhatsApp** `+351 964 987 386`
+  (`wa.me/351964987386`, com mensagem pré-preenchida). Foi assim que ela já
+  trabalha: o primeiro contato é uma conversa, onde ela manda o PDF com
+  funcionamento, horários e valores. O site não substitui isso — ele leva até lá.
+- **Secundário: Instagram** [@psialineferezin](https://instagram.com/psialineferezin).
+- **Preços ficam FORA do site** (decisão do Silas, 13/07/2026). Existem
+  (€140/mês, 4 sessões; 1ª sessão €35), mas são ditos no contato, não na página.
+  Nenhuma versão exibe valor.
 - Linha que deve ficar depois de 10s: *"Psicoterapia para adultos, online e
   presencial, com segurança e cuidado."*
-- Belief ladder: (1) ela é profissional de verdade (CRP, formação, 6 anos) →
-  (2) entende o que eu sinto → (3) o método (TCC) faz sentido → (4) é seguro e
-  acolhedor começar → CTA.
-- Proof a coletar com ela: número do **CRP**, formação/especialização,
-  depoimentos, faixa de atendimento, valores (se público), Instagram.
+- Belief ladder: (1) ela é profissional de verdade → (2) entende o que eu sinto →
+  (3) o método (TCC) faz sentido → (4) é seguro e acolhedor começar → CTA.
+- **Provas (confirmadas nos materiais):** Aline Ferezin dos Santos, psicóloga —
+  **CPP 30603** (Ordem dos Psicólogos Portugueses) e **CRP 06/162739** (Brasil);
+  6 anos de clínica; especialista em TCC; sessões de 50 min por Google Meet ou
+  presencial em Vila Nova de Gaia; espaço "seguro e sigiloso".
+- Voz/âncora emocional: Guimarães Rosa, *Grande Sertão: Veredas* — *"o que ela
+  quer da gente é coragem"* (já usada no site atual dela).
+
+## Pendências (não bloqueiam)
+
+- **Depoimentos**: não existem ainda. Sigilo profissional torna isso delicado —
+  se ela quiser, dá pra usar depoimento anônimo autorizado. Nenhuma versão
+  inventa depoimento.
+- **TAN Headline** (fonte paga dos títulos 2): pedir o arquivo à Aline. Até lá,
+  **Alice** cobre os dois níveis de título.
+- **Inglês**: o conteúdo EN já está escrito (`site/src/content/en.ts`) e acessível
+  por `?lang=en`. Falta só decidir se entra um seletor de idioma visível.
 
 ## Brand Personality
 

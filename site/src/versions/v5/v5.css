@@ -1,0 +1,1170 @@
+/* =============================================================================
+   V5 — "Coragem"
+   Blocos alternados de alto contraste. Verde profundo (texto branco/cinza) ↔
+   verde claríssimo (texto verde-escuro). Marrom é a cor da ênfase.
+   Nada de bege/creme, nada de gradiente decorativo, nada de card genérico.
+   ========================================================================== */
+
+.v5 {
+  /* Superfícies */
+  --deep: var(--green-900); /* dobra escura */
+  --paper: var(--green-50); /* dobra clara (verde tintado — nunca creme) */
+
+  /* Tinta */
+  --on-deep: var(--white);
+  --on-deep-soft: var(--gray-200);
+  --on-paper: var(--green-900);
+  --on-paper-soft: oklch(0.42 0.02 133);
+
+  /* Ênfase quente */
+  --warm-deep: var(--brown-200); /* marrom claro: única variante legível sobre verde escuro */
+  --warm-paper: var(--brown-700); /* corpo/ênfase sobre claro */
+  --warm-display: var(--brown-500); /* só em display (≥ 3:1) */
+
+  /* Fios */
+  --rule-deep: rgb(255 255 255 / 0.18);
+  --rule-paper: oklch(0.73 0.03 133 / 0.55);
+
+  --pad-x: clamp(1.25rem, 5vw, 3.5rem);
+  --header-h: 4rem;
+  --measure: 62ch;
+
+  background: var(--deep);
+  color: var(--on-deep);
+  overflow-x: clip; /* rede de segurança: nada sangra pra fora na horizontal */
+}
+
+/* Tipografia display: nunca mais apertada que -0.04em; nunca estoura o container. */
+.v5 h1,
+.v5 h2,
+.v5 h3,
+.v5 h4,
+.v5 .v5-huge,
+.v5 .v5-quote__text {
+  letter-spacing: -0.03em;
+  overflow-wrap: break-word;
+}
+
+/* ------------------------------------------------------------------ HEADER */
+
+.v5-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  min-height: var(--header-h);
+  padding-inline: var(--pad-x);
+  color: var(--on-deep);
+  /* Sólido sempre: sobre o herói ele se funde ao verde; sobre a foto, protege a leitura. */
+  background: var(--deep);
+  transition: box-shadow 0.5s var(--ease-out-quart);
+}
+.v5.is-scrolled .v5-header {
+  box-shadow: 0 1px 0 var(--rule-deep);
+}
+
+.v5-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  margin-right: auto;
+  padding-block: 0.75rem;
+}
+
+.v5-nav {
+  display: none;
+  gap: clamp(1rem, 2vw, 2rem);
+  font-size: var(--step--1);
+  font-weight: 500;
+}
+.v5-nav a {
+  text-decoration: none;
+  padding-block: 0.6rem;
+  color: var(--on-deep-soft);
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.3s var(--ease-out-quart),
+    border-color 0.3s var(--ease-out-quart);
+}
+.v5-nav a:hover {
+  color: var(--white);
+  border-color: var(--warm-deep);
+}
+
+.v5-header__cta {
+  display: none;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  border: 2px solid var(--warm-deep);
+  border-radius: 999px;
+  font-size: var(--step--1);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 0.35s var(--ease-out-expo),
+    color 0.35s var(--ease-out-expo);
+}
+.v5-header__cta:hover {
+  background: var(--white);
+  color: var(--green-900);
+}
+
+/* Progresso de leitura — só transform, some sozinho se o JS não rodar. */
+.v5-progress {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--warm-display);
+  transform: scaleX(var(--v5-progress, 0));
+  transform-origin: left;
+}
+
+@media (min-width: 960px) {
+  .v5 {
+    --header-h: 4.75rem;
+  }
+  .v5-nav,
+  .v5-header__cta {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------------------ BOTÕES */
+
+.v5-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  min-height: 56px;
+  padding: 1rem 1.75rem;
+  border: 2px solid var(--brown-200);
+  border-radius: 999px;
+  background: var(--brown-700);
+  color: var(--white); /* 7.5:1 */
+  font-size: var(--step-0);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background 0.4s var(--ease-out-expo),
+    border-color 0.4s var(--ease-out-expo),
+    transform 0.4s var(--ease-out-expo);
+}
+.v5-btn:hover {
+  background: var(--brown-900);
+  border-color: var(--white);
+  transform: translateY(-2px);
+}
+.v5-btn svg {
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.v5-btn:hover svg {
+  transform: translateX(4px);
+}
+.v5-btn--block {
+  width: 100%;
+}
+
+.v5-btn--ghost {
+  background: transparent;
+  border-color: currentColor;
+}
+.v5-band--deep .v5-btn--ghost,
+.v5-hero .v5-btn--ghost,
+.v5-closing .v5-btn--ghost {
+  color: var(--white);
+  border-color: rgb(255 255 255 / 0.55);
+}
+.v5-band--paper .v5-btn--ghost {
+  color: var(--green-900);
+  border-color: var(--green-700);
+}
+.v5-btn--ghost:hover {
+  background: rgb(255 255 255 / 0.1);
+  border-color: currentColor;
+  transform: translateY(-2px);
+}
+.v5-band--paper .v5-btn--ghost:hover {
+  background: rgb(0 0 0 / 0.05);
+}
+
+/* ------------------------------------------------- HERÓI: CARTAZ TIPOGRÁFICO
+
+   A primeira dobra da V5 NÃO tem foto: é palavra sobre verde profundo, em
+   escala de pôster. O retrato entra logo abaixo, inteiro, numa banda
+   full-bleed (.v5-plate). No mobile o herói ocupa a tela toda — por isso a
+   banda nunca aparece como uma fatia cortada no rodapé.
+   ========================================================================== */
+
+.v5-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--header-h) + var(--space-l)) var(--pad-x) var(--space-l);
+  background: var(--deep);
+}
+
+.v5-hero__inner {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+/* Etiqueta do cartaz: pequena, espaçada, com o fio marrom da versão embaixo. */
+.v5-hero__greeting {
+  display: inline-block;
+  padding-bottom: var(--space-2xs);
+  border-bottom: 3px solid var(--warm-display);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--warm-deep);
+}
+
+/* Quebra de linha intencional: a medida em ch empilha o título em 2–3 linhas
+   ("Você está / no lugar / certo.") — cartaz, não manchete de landing. */
+.v5-hero__title {
+  margin-top: var(--space-m);
+  font-size: clamp(3.4rem, 2.05rem + 6.6vw, 7rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  color: var(--white);
+  max-width: 11ch;
+  text-wrap: normal; /* sobrescreve o `balance` do reset: quebra previsível */
+}
+
+/* Deslocado para a direita no desktop — a assimetria é o gesto do cartaz. */
+.v5-hero__subhead {
+  margin-top: var(--space-l);
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 1rem + 2vw, 2.5rem);
+  line-height: 1.24;
+  letter-spacing: -0.025em;
+  color: var(--on-deep-soft);
+  max-width: 21ch;
+}
+
+/* "corajoso" — a tese da versão. Mesmo tratamento da ênfase da citação. */
+.v5-em {
+  position: relative;
+  font-style: normal;
+  color: var(--warm-deep); /* 6.3:1 sobre o verde profundo */
+  white-space: nowrap;
+}
+.v5-em::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.06em;
+  height: 0.05em;
+  background: var(--warm-display);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.1s var(--ease-out-expo) 0.6s;
+}
+.v5.is-entered .v5-em::after {
+  transform: scaleX(1);
+}
+
+/* Rodapé do cartaz: a linha de meta (o que é + como falar). */
+.v5-hero__meta {
+  display: grid;
+  gap: var(--space-l);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-m);
+  border-top: 1px solid var(--rule-deep);
+}
+
+.v5-hero__tagline {
+  max-width: 42ch;
+  font-size: var(--step-0);
+  color: var(--on-deep-soft);
+}
+
+.v5-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+}
+
+.v5-scroll {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: var(--space-l);
+  font-size: var(--step--1);
+  color: var(--on-deep-soft);
+}
+.v5-scroll__line {
+  display: block;
+  width: 3rem;
+  height: 1px;
+  background: var(--warm-deep);
+  transform-origin: left;
+  animation: v5-pull 2.6s var(--ease-out-quart) infinite;
+}
+@keyframes v5-pull {
+  0%,
+  100% {
+    transform: scaleX(0.35);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+}
+
+@media (min-width: 900px) {
+  .v5-hero {
+    padding-block: calc(var(--header-h) + var(--space-l)) var(--space-l);
+  }
+  .v5-hero__subhead {
+    margin-left: 20%;
+  }
+  .v5-hero__meta {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+    margin-top: var(--space-xl);
+  }
+  .v5-scroll {
+    display: flex;
+  }
+}
+
+/* O cartaz, composto: título imenso à esquerda, subhead descendo à direita e
+   pousando na base do título. A assimetria preenche a tela — e é o oposto da
+   V1 (coluna de texto + foto ao lado). */
+@media (min-width: 1000px) {
+  .v5-hero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(16rem, 1fr);
+    grid-template-areas:
+      'eyebrow eyebrow'
+      'title   sub'
+      'meta    meta'
+      'scroll  scroll';
+    align-items: end;
+    column-gap: clamp(2rem, 5vw, 5rem);
+  }
+  .v5-hero__greeting {
+    grid-area: eyebrow;
+    justify-self: start;
+  }
+  .v5-hero__title {
+    grid-area: title;
+  }
+  .v5-hero__subhead {
+    grid-area: sub;
+    margin-left: 0;
+    margin-bottom: 0.5em;
+    max-width: 18ch;
+  }
+  .v5-hero__meta {
+    grid-area: meta;
+  }
+  .v5-scroll {
+    grid-area: scroll;
+  }
+}
+
+/* ---------------------------------------- A BANDA DO RETRATO (LCP, full-bleed)
+
+   Largura total, ponta a ponta, sem véu nem gradiente: a V1 já é a proposta do
+   "abraço" com filtro verde por cima da foto. Aqui a foto é crua — e inteira:
+   no mobile a proporção da banda é quase a do retrato (3:4), então não há
+   fatia cortada.
+   ========================================================================== */
+
+.v5-plate {
+  position: relative;
+  overflow: hidden;
+  height: 66svh;
+  min-height: 24rem;
+  background: var(--green-700);
+  border-top: 3px solid var(--warm-display);
+}
+@media (min-width: 900px) {
+  .v5-plate {
+    height: 84svh;
+    min-height: 32rem;
+  }
+}
+
+/* <picture> é inline: sem isto, o height:100% da imagem mede a picture (auto)
+   e não o contêiner — sobra uma faixa de fundo embaixo da foto. */
+.v5-plate picture,
+.v5-about__media picture,
+.v5-first__media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.v5-plate img,
+.v5-about__media img,
+.v5-first__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 2D e sem will-change de propósito: promover estas fotos a camada própria
+     fazia elas sumirem em captura/print (camada não pintada). */
+  transform: translateY(var(--py, 0px)) scale(1.06);
+}
+/* Rosto no terço superior — o corte come o rodapé da foto, nunca a cabeça.
+   No desktop o `cover` já amplia a foto (o original tem 1200px de largura):
+   nada de zoom extra — só o deslocamento do parallax. */
+.v5-plate img {
+  object-position: 50% 18%;
+}
+@media (min-width: 900px) {
+  .v5-plate img {
+    object-position: 50% 28%;
+    transform: translateY(var(--py, 0px)) scale(1.02);
+  }
+}
+
+/* --------------------------------------------------------- DOBRAS / GRID */
+
+.v5-band {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(var(--pad-x), 1fr)
+    [content-start] minmax(0, 1240px) [content-end]
+    minmax(var(--pad-x), 1fr) [full-end];
+  padding-block: var(--space-2xl);
+  scroll-margin-top: var(--header-h);
+}
+.v5-band > * {
+  grid-column: content;
+}
+.v5-band--flush {
+  padding-block: 0;
+}
+.v5-band--flush > * {
+  grid-column: full;
+}
+
+.v5-band--deep {
+  background: var(--deep);
+  color: var(--on-deep);
+}
+.v5-band--paper {
+  background: var(--paper);
+  color: var(--on-paper);
+}
+
+.v5-h2 {
+  font-size: clamp(2.2rem, 1.35rem + 3.9vw, 4.6rem);
+  line-height: 1.04;
+  max-width: 18ch;
+  margin-bottom: var(--space-l);
+}
+.v5-band--deep .v5-h2 {
+  color: var(--white);
+}
+.v5-band--paper .v5-h2 {
+  color: var(--green-900);
+}
+
+.v5-prose > * + * {
+  margin-top: var(--space-m);
+}
+.v5-prose p {
+  max-width: var(--measure);
+  font-size: var(--step-0);
+}
+.v5-band--deep .v5-prose p {
+  color: var(--on-deep-soft);
+}
+.v5-band--paper .v5-prose p {
+  color: var(--on-paper-soft);
+}
+
+.v5-lead {
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+.v5-band--paper .v5-prose .v5-lead {
+  color: var(--green-900);
+}
+.v5-lead--wide {
+  max-width: 54ch;
+  margin-top: calc(-1 * var(--space-s));
+  margin-bottom: var(--space-xl);
+}
+.v5-band--deep .v5-lead--wide {
+  color: var(--on-deep-soft);
+}
+.v5-band--paper .v5-lead--wide {
+  color: var(--on-paper-soft);
+}
+
+/* ------------------------------------------------ POR QUE É DIFÍCIL MUDAR */
+
+.v5-change {
+  display: grid;
+  gap: var(--space-xl);
+}
+@media (min-width: 900px) {
+  .v5-change {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+    gap: clamp(3rem, 6vw, 6rem);
+    align-items: start;
+  }
+}
+
+/* A pergunta é o coração da dobra — tamanho de display, cor da ênfase. */
+.v5-question {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 1.05rem + 2.9vw, 3.2rem);
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  color: var(--warm-paper);
+  padding-top: var(--space-m);
+  border-top: 3px solid var(--warm-display);
+  overflow-wrap: break-word;
+}
+@media (min-width: 900px) {
+  .v5-question {
+    margin-top: var(--space-l);
+  }
+}
+
+.v5-steps {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-l);
+  border-top: 1px solid var(--rule-paper);
+  max-width: 68ch;
+}
+.v5-steps__intro,
+.v5-steps__outro {
+  font-size: var(--step-0);
+  color: var(--on-paper-soft);
+}
+.v5-steps__list {
+  list-style: none;
+  margin: var(--space-m) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-s);
+}
+.v5-steps__list li {
+  position: relative;
+  padding-left: 2.75rem;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.35;
+  color: var(--green-900);
+}
+.v5-steps__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.75em;
+  width: 1.75rem;
+  height: 2px;
+  background: var(--warm-display);
+  transform: scaleX(0.2);
+  transform-origin: left;
+  transition: transform 0.7s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 90ms + 120ms);
+}
+.v5.is-armed [data-rise].is-in .v5-steps__list li::before,
+.v5:not(.is-armed) .v5-steps__list li::before {
+  transform: scaleX(1);
+}
+
+/* ------------------------------------------------------------------ SOBRE */
+
+.v5-about {
+  display: grid;
+}
+.v5-about__media {
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: var(--green-700);
+}
+.v5-about__media img {
+  object-position: 50% 6%;
+}
+.v5-about__copy {
+  padding: var(--space-xl) var(--pad-x) var(--space-2xl);
+}
+@media (min-width: 900px) {
+  .v5-about {
+    grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+    align-items: center;
+  }
+  /* A foto preenche a altura da dobra e sangra pela borda esquerda.
+     (aspect-ratio + height:100% faria a largura estourar a coluna do grid.) */
+  .v5-about__media {
+    aspect-ratio: auto;
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    min-height: 34rem;
+  }
+  .v5-about__copy {
+    padding: var(--space-2xl) max(var(--pad-x), calc((100vw - 1240px) / 2)) var(--space-2xl)
+      clamp(2rem, 5vw, 5rem);
+    max-width: 46rem;
+  }
+}
+
+.v5-role {
+  margin-top: calc(-1 * var(--space-m));
+  margin-bottom: var(--space-l);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--warm-deep);
+}
+
+.v5-facts {
+  list-style: none;
+  margin: var(--space-l) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-s);
+}
+.v5-facts li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--rule-deep);
+}
+.v5-facts strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--step-1);
+  color: var(--warm-deep);
+}
+.v5-facts span {
+  font-size: var(--step--1);
+  color: var(--on-deep-soft);
+}
+
+/* ---------------------------------------------------------- COMO TRABALHO */
+
+.v5-list {
+  display: grid;
+}
+.v5-row {
+  position: relative;
+  display: grid;
+  gap: var(--space-xs);
+  padding-block: var(--space-l);
+  border-top: 1px solid var(--rule-paper);
+}
+.v5-row:last-child {
+  border-bottom: 1px solid var(--rule-paper);
+}
+.v5-row__rule {
+  position: absolute;
+  inset: -1px auto auto 0;
+  width: clamp(3rem, 12%, 8rem);
+  height: 3px;
+  background: var(--warm-display);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.9s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 80ms);
+}
+.v5-row.is-in .v5-row__rule,
+.v5:not(.is-armed) .v5-row__rule {
+  transform: scaleX(1);
+}
+.v5-row__title {
+  font-size: var(--step-2);
+  color: var(--green-900);
+}
+.v5-row__text {
+  max-width: var(--measure);
+  color: var(--on-paper-soft);
+}
+@media (min-width: 900px) {
+  .v5-row {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: baseline;
+    padding-block: var(--space-xl);
+  }
+  .v5-row__title {
+    font-size: var(--step-3);
+  }
+}
+
+/* ------------------------------------------------------------ BENEFÍCIOS */
+
+.v5-benefits {
+  display: grid;
+}
+.v5-benefit {
+  padding-block: var(--space-l);
+  border-top: 1px solid var(--rule-deep);
+}
+.v5-benefit:last-child {
+  border-bottom: 1px solid var(--rule-deep);
+}
+.v5-benefit__title {
+  font-size: clamp(1.7rem, 1.1rem + 2.6vw, 3.1rem);
+  line-height: 1.08;
+  color: var(--white);
+  max-width: 14ch;
+}
+.v5-benefit__text {
+  margin-top: var(--space-s);
+  max-width: 48ch;
+  color: var(--on-deep-soft);
+}
+/* Quebra de grade intencional: cada item entra um pouco mais pra dentro. */
+@media (min-width: 900px) {
+  .v5-benefit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: end;
+    padding-block: var(--space-xl);
+  }
+  .v5-benefit__text {
+    margin-top: 0;
+    padding-bottom: 0.4rem;
+  }
+  .v5-benefit:nth-child(2) {
+    padding-left: 8%;
+  }
+  .v5-benefit:nth-child(3) {
+    padding-left: 16%;
+  }
+}
+
+/* ------------------------------------------------------------ NOSSO ESPAÇO */
+
+.v5-space {
+  display: grid;
+  gap: var(--space-l);
+}
+.v5-space__lead {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.15rem + 2.7vw, 3.3rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--green-900);
+  max-width: 16ch;
+  overflow-wrap: break-word;
+}
+@media (min-width: 900px) {
+  .v5-space {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(3rem, 6vw, 6rem);
+    align-items: start;
+  }
+  .v5-space__prose {
+    padding-top: 0.5rem;
+  }
+}
+
+/* "O vínculo" — palavra-cartaz. Display: 3.65:1 sobre o claro (≥ 3:1). */
+.v5-huge {
+  margin-top: var(--space-xl);
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 1.2rem + 9vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--warm-display);
+  text-align: right;
+  overflow-wrap: break-word;
+}
+
+/* ---------------------------------------------------------------- A SESSÃO */
+
+.v5-session__lead {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.8rem);
+  line-height: 1.16;
+  letter-spacing: -0.03em;
+  color: var(--white);
+  max-width: 22ch;
+}
+.v5-session__format {
+  margin-top: var(--space-m);
+  max-width: 44ch;
+  color: var(--on-deep-soft);
+}
+.v5-session__sub {
+  margin-top: var(--space-2xl);
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--warm-deep);
+}
+.v5-structure {
+  display: grid;
+  margin-top: var(--space-m);
+}
+.v5-structure__item {
+  padding-block: var(--space-m);
+  border-top: 1px solid var(--rule-deep);
+}
+.v5-structure__item h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--step-2);
+  line-height: 1.15;
+  color: var(--white);
+}
+.v5-structure__item p {
+  margin-top: var(--space-2xs);
+  font-size: var(--step-0);
+  color: var(--on-deep-soft);
+}
+@media (min-width: 768px) {
+  .v5-structure {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 3rem);
+  }
+  .v5-structure__item {
+    border-top-width: 2px;
+  }
+}
+.v5-note {
+  margin-top: var(--space-xl);
+  padding-left: var(--space-m);
+  border-left: 2px solid var(--rule-deep);
+  max-width: 56ch;
+  font-size: var(--step--1);
+  color: var(--on-deep-soft);
+}
+
+/* -------------------------------------------------------- PRIMEIRA SESSÃO */
+
+.v5-first {
+  display: grid;
+}
+.v5-first__copy {
+  padding: var(--space-2xl) var(--pad-x);
+}
+.v5-first__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3rem, 1.8rem + 5.4vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--green-900);
+  margin-bottom: var(--space-l);
+}
+.v5-first__actions {
+  margin-top: var(--space-l);
+}
+.v5-first__media {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  background: var(--green-300);
+}
+.v5-first__media img {
+  object-position: 50% 26%;
+}
+@media (min-width: 900px) {
+  .v5-first {
+    grid-template-columns: minmax(0, 56%) minmax(0, 44%);
+    align-items: center;
+  }
+  .v5-first__copy {
+    padding: var(--space-2xl) clamp(2rem, 5vw, 5rem) var(--space-2xl)
+      max(var(--pad-x), calc((100vw - 1240px) / 2));
+    max-width: 48rem;
+  }
+  .v5-first__media {
+    aspect-ratio: auto;
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    min-height: 34rem;
+  }
+}
+
+/* ---------------------------------------------------- O CLÍMAX: A CITAÇÃO */
+
+.v5-quote {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: var(--space-2xl) var(--pad-x);
+  background: var(--deep);
+  color: var(--white);
+}
+.v5-quote__block {
+  margin: 0;
+  width: 100%;
+  max-width: 1240px;
+}
+.v5-quote__text {
+  font-family: var(--font-display);
+  font-size: clamp(2.3rem, 1.15rem + 5vw, 5.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: var(--white);
+  max-width: 20ch;
+  text-wrap: pretty;
+}
+/* Palavras sobem escalonadas — SÓ transform: sem o observer, seguem legíveis. */
+.v5-quote__w {
+  display: inline-block;
+  transition: transform 0.9s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 26ms);
+}
+.v5.is-armed .v5-quote__text:not(.is-in) .v5-quote__w {
+  transform: translateY(0.32em);
+}
+.v5-quote__em {
+  position: relative;
+  font-style: normal;
+  color: var(--warm-deep); /* 6.3:1 sobre o verde profundo */
+}
+.v5-quote__em::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.08em;
+  height: 0.06em;
+  background: var(--warm-display);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1s var(--ease-out-expo) 0.7s;
+}
+.v5-quote__text.is-in .v5-quote__em::after,
+.v5:not(.is-armed) .v5-quote__em::after {
+  transform: scaleX(1);
+}
+.v5-quote__source {
+  margin-top: var(--space-l);
+  padding-top: var(--space-s);
+  border-top: 1px solid var(--rule-deep);
+  max-width: 32ch;
+  font-size: var(--step--1);
+  color: var(--on-deep-soft);
+}
+.v5-quote__source cite {
+  font-style: normal;
+}
+
+/* ---------------------------------------------------------------- DÚVIDAS */
+
+.v5-faq {
+  display: grid;
+}
+.v5-faq__item {
+  border-top: 1px solid var(--rule-paper);
+}
+.v5-faq__item:last-child {
+  border-bottom: 1px solid var(--rule-paper);
+}
+.v5-faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  min-height: 64px;
+  padding-block: var(--space-m);
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--green-900);
+}
+.v5-faq__item summary::-webkit-details-marker {
+  display: none;
+}
+.v5-faq__sign {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.v5-faq__sign::before,
+.v5-faq__sign::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 2px;
+  background: var(--warm-paper);
+}
+.v5-faq__sign::after {
+  transform: rotate(90deg);
+}
+.v5-faq__item[open] .v5-faq__sign {
+  transform: rotate(135deg);
+}
+.v5-faq__item p {
+  max-width: 68ch;
+  padding-bottom: var(--space-l);
+  color: var(--on-paper-soft);
+}
+
+/* ---------------------------------------------------------------- CONTATO */
+
+.v5-closing {
+  background: var(--green-700); /* #67735c — a cor da marca ganha a dobra final */
+  color: var(--white);
+  text-align: center;
+  justify-items: center;
+}
+.v5-closing__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.8rem, 1.7rem + 5vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--white);
+}
+.v5-closing__text {
+  margin-top: var(--space-m);
+  max-width: 46ch;
+  color: var(--white); /* 5:1 sobre o verde principal — nada de cinza aqui */
+}
+.v5-closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-s);
+  margin-top: var(--space-l);
+}
+.v5-closing__note {
+  margin-top: var(--space-m);
+  font-size: var(--step--1);
+  color: var(--white);
+}
+
+/* ----------------------------------------------------------------- RODAPÉ */
+
+.v5-footer {
+  display: grid;
+  gap: var(--space-l);
+  padding: var(--space-xl) var(--pad-x) calc(var(--space-xl) + 5rem);
+  background: var(--deep);
+  color: var(--on-deep-soft);
+  border-top: 1px solid var(--rule-deep);
+}
+.v5-wordmark--footer {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  color: var(--white);
+}
+.v5-footer__role,
+.v5-footer__where {
+  margin-top: var(--space-2xs);
+  font-size: var(--step--1);
+}
+.v5-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-m);
+  font-size: var(--step--1);
+  font-weight: 500;
+}
+.v5-footer__links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--warm-deep);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.v5-footer__links a:hover {
+  color: var(--white);
+}
+@media (min-width: 768px) {
+  .v5-footer {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    padding-bottom: var(--space-xl);
+  }
+  .v5-footer__links {
+    justify-content: flex-end;
+  }
+}
+
+/* ----------------------------------------------- BARRA FIXA (MOBILE) */
+
+.v5-bar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: var(--z-sticky);
+  padding: 0.65rem var(--pad-x) calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  background: var(--deep);
+  border-top: 2px solid var(--warm-display);
+  transition: transform 0.6s var(--ease-out-expo);
+}
+/* Só o JS esconde a barra (enquanto o herói está na tela). Sem JS, ela aparece. */
+.v5.is-js:not(.is-past-hero) .v5-bar {
+  transform: translateY(115%);
+}
+@media (min-width: 960px) {
+  .v5-bar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ MOTION */
+
+/* Entrada do herói: opacidade só aqui, e com rede de segurança no JS (600ms). */
+.v5-in {
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 1s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.v5:not(.is-entered) .v5-in {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Reveal de scroll: SÓ transform. O conteúdo já está visível — isto enriquece. */
+.v5.is-armed [data-rise] {
+  transition: transform 0.9s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 80ms);
+}
+.v5.is-armed [data-rise]:not(.is-in) {
+  transform: translateY(26px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sem movimento: tudo chega no lugar, imediatamente (tokens.css zera as durações). */
+  .v5-in,
+  .v5.is-armed [data-rise],
+  .v5.is-armed [data-rise]:not(.is-in),
+  .v5:not(.is-entered) .v5-in,
+  .v5.is-armed .v5-quote__text:not(.is-in) .v5-quote__w {
+    opacity: 1;
+    transform: none;
+  }
+  .v5-em::after {
+    transform: scaleX(1);
+  }
+  .v5-scroll__line {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .v5-plate img,
+  .v5-about__media img,
+  .v5-first__media img {
+    transform: scale(1.06);
+  }
+}

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Propostas — site da Aline Ferezin</title>
+    <meta name="description" content="Cinco direções visuais para o novo site da Aline Ferezin. Abra, compare, escolha." />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./src/assets/fonts.css" />
+    <link rel="stylesheet" href="./src/shared/tokens.css" />
+    <style>
+      body {
+        background: var(--green-900);
+        color: var(--white);
+        padding: var(--space-xl) var(--space-m) var(--space-2xl);
+      }
+      .wrap {
+        max-width: 60rem;
+        margin: 0 auto;
+      }
+      header p {
+        max-width: 46ch;
+        color: var(--green-300);
+        margin-top: var(--space-s);
+      }
+      h1 {
+        font-size: var(--step-4);
+      }
+      .lead {
+        font-size: var(--step-1);
+        color: var(--white);
+        margin-top: var(--space-s);
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: var(--space-xl) 0 0;
+        display: grid;
+        gap: var(--space-m);
+      }
+      @media (min-width: 48rem) {
+        ul {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      a.card {
+        display: grid;
+        gap: var(--space-xs);
+        padding: var(--space-m);
+        border: 1px solid color-mix(in oklch, var(--green-300) 40%, transparent);
+        border-radius: 1rem;
+        text-decoration: none;
+        background: color-mix(in oklch, var(--green-700) 45%, transparent);
+        transition:
+          background 0.35s var(--ease-out-quart),
+          transform 0.35s var(--ease-out-quart),
+          border-color 0.35s var(--ease-out-quart);
+      }
+      a.card:hover,
+      a.card:focus-visible {
+        background: var(--green-700);
+        border-color: var(--brown-500);
+        transform: translateY(-2px);
+      }
+      a.card img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        object-position: top center;
+        border-radius: 0.5rem;
+        background: var(--green-700);
+        margin-bottom: var(--space-2xs);
+      }
+      .id {
+        font-size: var(--step--1);
+        letter-spacing: 0.08em;
+        color: var(--brown-200);
+        font-weight: 600;
+      }
+      h2 {
+        font-size: var(--step-2);
+      }
+      .desc {
+        color: var(--green-300);
+        font-size: var(--step--1);
+        line-height: 1.5;
+      }
+      footer {
+        margin-top: var(--space-2xl);
+        color: var(--green-300);
+        font-size: var(--step--1);
+        border-top: 1px solid color-mix(in oklch, var(--green-300) 25%, transparent);
+        padding-top: var(--space-m);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Cinco caminhos para o seu site</h1>
+        <p class="lead">Aline — cada link abaixo é um site inteiro, funcionando, no celular e no computador. Mesmo conteúdo, mesma marca; cinco jeitos diferentes de te apresentar.</p>
+        <p>Abra, role até o fim, e me diga qual te representa. Dá pra misturar: “gostei do começo da 2 com a foto da 4”.</p>
+      </header>
+
+      <ul>
+        <li>
+          <a class="card" href="./v1/">
+            <img src="./shots/v1.png" alt="" onerror="this.remove()" />
+            <span class="id">V1</span>
+            <h2>Acolhida</h2>
+            <p class="desc">Verde da sua marca por toda a tela, sua foto grande logo de cara. Quente, íntimo, direto ao “você está no lugar certo”.</p>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="./v2/">
+            <img src="./shots/v2.png" alt="" onerror="this.remove()" />
+            <span class="id">V2</span>
+            <h2>Passadiço</h2>
+            <p class="desc">Claro e arejado. A página é um percurso: uma linha conduz o visitante da dúvida (“por que é difícil mudar?”) até o primeiro passo.</p>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="./v3/">
+            <img src="./shots/v3.png" alt="" onerror="this.remove()" />
+            <span class="id">V3</span>
+            <h2>Consultório</h2>
+            <p class="desc">Sua foto fica fixa ao lado enquanto o conteúdo passa. Silencioso, organizado, com a sensação de já estar sentado na sala.</p>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="./v4/">
+            <img src="./shots/v4.png" alt="" onerror="this.remove()" />
+            <span class="id">V4</span>
+            <h2>Diálogo</h2>
+            <p class="desc">A página conversa: as perguntas de quem chega, respondidas pela sua voz. Muito ar, texto grande, o azul da marca conduzindo.</p>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="./v5/">
+            <img src="./shots/v5.png" alt="" onerror="this.remove()" />
+            <span class="id">V5</span>
+            <h2>Coragem</h2>
+            <p class="desc">A mais ousada. Grandes blocos, tipografia forte e o Guimarães Rosa no centro: “o que ela quer da gente é coragem”.</p>
+          </a>
+        </li>
+      </ul>
+
+      <footer>
+        <p>Rascunhos para escolha — não indexados e fora do ar público. O site oficial continua em alineferezin.com.</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,6 +1,10 @@
 # Materiais-fonte da Aline (grandes; ficam locais, não publicados)
 materials/
 
+# Dependências e cache de build
+node_modules/
+.vite/
+
 # Lixo do Windows/WSL
 *:Zone.Identifier
 .DS_Store

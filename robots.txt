@@ -1,0 +1,3 @@
+# As propostas em /mockup/ são rascunhos para escolha — não devem ser indexados.
+User-agent: *
+Disallow: /mockup/

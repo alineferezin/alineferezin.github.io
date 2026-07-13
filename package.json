@@ -1,0 +1,31 @@
+{
+  "name": "alineferezin-site",
+  "version": "1.0.0",
+  "description": "Site profissional da Aline Ferezin, psicóloga clínica (TCC). Publicado via GitHub Pages.",
+  "private": true,
+  "type": "module",
+  "license": "ISC",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "fonts": "node scripts/fonts.mjs",
+    "photos": "node scripts/photos.mjs",
+    "entries": "node scripts/entries.mjs",
+    "shots": "node scripts/shots.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "puppeteer-core": "^24.43.1",
+    "sharp": "^0.35.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
+  }
+}

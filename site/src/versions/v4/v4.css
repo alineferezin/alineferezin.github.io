@@ -1,0 +1,991 @@
+/**
+ * V4 — "Diálogo". Mobile-first.
+ *
+ * A página é uma transcrição de conversa, e as DUAS vozes têm cor:
+ *
+ *   quem chega  → AZUL DA MARCA (#7891ae) em ÁREA: faixas cheias, sangradas,
+ *                 com a pergunta em Montserrat rente à margem esquerda.
+ *   ela         → VERDE DA MARCA: tinta do texto (verde quase-preto), travessão
+ *                 verde, botões no verde principal (#67735c), blocos escuros.
+ *
+ * Contraste (medido, sRGB/WCAG):
+ *   --ink (oklch 0.26) sobre #7891ae = 4.74:1  → AA em corpo, sobre o azul CHEIO.
+ *   --ink sobre --paper = 14.8:1 · --ink-2 sobre --paper = 8.7:1
+ *   branco sobre --green-700 (#67735c) = 5.9:1 · sobre --green-900 = 11.6:1
+ *   --green-700 como tinta sobre --paper = 5.7:1 e sobre --green-tint = 4.8:1
+ * Por isso o azul escuro (--blue-ink) só aparece onde é TINTA (perguntas do FAQ),
+ * nunca como superfície: superfície azul é o azul da marca, exato.
+ */
+
+.v4 {
+  /* Papel: branco quase puro, mal tingido de verde. Nunca creme. */
+  --paper: oklch(0.985 0.004 130);
+  --paper-2: oklch(0.955 0.008 130);
+
+  /* Superfícies dela (verde). */
+  --green-tint: oklch(0.925 0.018 133);
+  --green-mid: oklch(0.5 0.035 133); /* #67735c — verde principal da marca */
+  --green-dark: oklch(0.34 0.028 133);
+
+  /* Azul da marca — SUPERFÍCIE, valor exato da identidade. */
+  --blue: #7891ae;
+  --blue-tint: oklch(0.93 0.022 255);
+  --blue-ink: oklch(0.44 0.075 255); /* só tinta (perguntas do FAQ) */
+
+  /* Tinta: verde quase-preto. A mesma sobre papel e sobre o azul cheio. */
+  --ink: oklch(0.26 0.035 133);
+  --ink-2: oklch(0.4 0.032 133);
+
+  --on-dark: oklch(0.96 0.01 130);
+  --on-dark-2: oklch(0.86 0.02 130);
+
+  --rule: oklch(0.88 0.012 130);
+  --rule-blue: oklch(0.26 0.035 133 / 0.28);
+  --rule-dark: oklch(1 0 0 / 0.22);
+
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+  --measure: 34rem; /* ~66ch */
+  --col: 70rem;
+  /* Coluna do travessão: o marcador de fala dela fica pendurado nela.
+     Larga o bastante para o travessão nunca encostar na letra (Alice/Montserrat). */
+  --dash-w: 2.1rem;
+
+  background: var(--paper);
+  color: var(--ink);
+  overflow-x: clip;
+}
+
+/* ─────────────────────────  topo  ───────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.top__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: 0.55rem var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+}
+.top__mark {
+  text-decoration: none;
+  display: grid;
+  gap: 0.1rem;
+  margin-right: auto;
+}
+.top__name {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.1;
+  color: var(--ink);
+}
+.top__role {
+  display: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+.top__nav {
+  display: none;
+  gap: var(--space-m);
+}
+.top__nav a {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s var(--ease-out-quart), border-color 0.2s var(--ease-out-quart);
+}
+.top__nav a:hover {
+  color: var(--green-mid);
+  border-bottom-color: var(--green-mid);
+}
+.top__cta {
+  display: none;
+}
+
+@media (min-width: 62rem) {
+  .top__role {
+    display: block;
+  }
+  .top__nav {
+    display: flex;
+  }
+  .top__cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    background: var(--green-mid);
+    color: var(--white);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s var(--ease-out-quart);
+  }
+  .top__cta:hover {
+    background: var(--green-dark);
+  }
+}
+
+/* ─────────────────────────  botões  ───────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.6rem 1.5rem;
+  border-radius: 999px;
+  font-size: var(--step-0);
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.005em;
+  transition: background 0.22s var(--ease-out-quart), color 0.22s var(--ease-out-quart),
+    border-color 0.22s var(--ease-out-quart), transform 0.22s var(--ease-out-quart);
+}
+/* A ação é dela → verde da marca. */
+.btn--solid {
+  background: var(--green-mid);
+  color: var(--white);
+  border: 1px solid var(--green-mid);
+}
+.btn--solid:hover {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  transform: translateY(-1px);
+}
+.btn--quiet {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+.btn--quiet:hover {
+  border-color: var(--green-mid);
+  color: var(--green-mid);
+}
+.btn--big {
+  min-height: 56px;
+  padding: 0.75rem 2rem;
+  font-size: var(--step-1);
+}
+.band--green .btn--quiet {
+  color: var(--on-dark);
+  border-color: var(--rule-dark);
+}
+.band--green .btn--quiet:hover {
+  color: var(--white);
+  border-color: var(--white);
+}
+.band--green .btn--solid {
+  background: var(--white);
+  color: var(--ink);
+  border-color: var(--white);
+}
+
+/* ─────────────────────────  herói: a primeira fala dela  ───────────────────────── */
+
+.hero {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 3rem) var(--gutter) clamp(1.75rem, 5vw, 3.5rem);
+  animation: v4-enter 0.7s var(--ease-out-expo) backwards;
+}
+/* Linha do interlocutor: retrato + saudação. No mobile, o retrato é um retrato
+   redondo, INTEIRO e bem enquadrado — não uma fatia cortada. */
+.hero__speaker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-s);
+}
+.hero__photo {
+  flex: none;
+}
+.hero__photo img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+.hero__greeting {
+  display: grid;
+  grid-template-columns: var(--dash-w) 1fr;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.2;
+  color: var(--green-mid);
+}
+.hero__greeting::before {
+  content: '—';
+  font-family: var(--font-body);
+  line-height: 1;
+  color: var(--green-mid);
+}
+.hero__headline {
+  font-size: clamp(2.6rem, 1.9rem + 3.4vw, 4.73rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  max-width: 11ch;
+}
+.hero__subhead {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.3;
+  color: var(--green-mid);
+  max-width: 22ch;
+  margin-top: var(--space-s);
+}
+.hero__tagline {
+  margin-top: var(--space-s);
+  max-width: 40ch;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-m);
+}
+
+/* Tablet: o retrato redondo pode respirar um pouco mais. */
+@media (min-width: 34rem) and (max-width: 55.99rem) {
+  .hero__photo img {
+    width: 5.25rem;
+    height: 5.25rem;
+  }
+}
+
+@media (min-width: 56rem) {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+    grid-template-areas:
+      'greet photo'
+      'turn  photo';
+    align-items: start;
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+    padding-block: clamp(2.5rem, 4vw, 3.5rem) clamp(2.5rem, 4vw, 4rem);
+  }
+  /* os dois filhos da linha do interlocutor viram itens do grid do herói */
+  .hero__speaker {
+    display: contents;
+  }
+  .hero__greeting {
+    grid-area: greet;
+    align-self: end;
+    margin-bottom: var(--space-s);
+  }
+  .hero__turn {
+    grid-area: turn;
+  }
+  .hero__photo {
+    grid-area: photo;
+    position: relative;
+    align-self: start;
+  }
+  /* placa verde atrás do retrato — a marca dela entrando pela cor */
+  .hero__photo::before {
+    content: '';
+    position: absolute;
+    inset: 1.75rem -0.85rem -0.85rem 1.75rem;
+    background: var(--green-tint);
+    border-radius: 2px;
+  }
+  .hero__photo img {
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 2px;
+    object-position: 50% 22%;
+  }
+  .hero__tagline {
+    font-size: var(--step-0);
+  }
+}
+
+/* ─────────────────────────  turnos  ───────────────────────── */
+
+.turn {
+  display: grid;
+}
+.turn__in {
+  max-width: var(--col);
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter) var(--space-2xl);
+}
+
+/* A fala de quem chega: faixa AZUL DA MARCA, sangrada de borda a borda.
+   Texto em verde quase-preto (4.74:1 sobre #7891ae — AA de verdade). */
+.askband {
+  background: var(--blue);
+  color: var(--ink);
+}
+.askband__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: clamp(1.75rem, 5vw, 2.75rem) var(--gutter);
+}
+.ask {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--step-3);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  max-width: 18ch;
+}
+.ask::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  margin-top: var(--space-s);
+  background: var(--rule-blue);
+}
+
+/* A fala dela: medida curta, recuo, travessão pendurado. */
+.say {
+  padding-left: var(--dash-w);
+  max-width: calc(var(--measure) + var(--dash-w));
+}
+.say--wide {
+  max-width: calc(42rem + var(--dash-w));
+}
+.say__p {
+  font-size: var(--step-0);
+  line-height: 1.72;
+  color: var(--ink);
+  max-width: var(--measure);
+}
+.say__p + .say__p,
+.say__p + .dash {
+  margin-top: var(--space-s);
+}
+
+/* Travessão pendurado: abre o turno dela. Coluna própria — nunca encosta na letra. */
+.dash {
+  display: grid;
+  grid-template-columns: var(--dash-w) 1fr;
+  align-items: baseline;
+  margin-left: calc(var(--dash-w) * -1);
+  max-width: calc(var(--measure) + var(--dash-w));
+}
+.dash::before {
+  content: '—';
+  font-family: var(--font-body);
+  font-size: var(--step-1);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--green-mid);
+}
+
+.say__lead {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: calc(24ch + var(--dash-w));
+  margin-block: var(--space-m) var(--space-s);
+}
+.say__lead:first-child {
+  margin-top: 0;
+}
+.say__lead--h {
+  font-size: var(--step-3);
+  margin-bottom: var(--space-m);
+  max-width: calc(20ch + var(--dash-w));
+}
+.say--onDark {
+  max-width: calc(44rem + var(--dash-w));
+}
+.say--onDark .say__p,
+.say--onDark .say__lead {
+  color: var(--on-dark);
+}
+.say--onDark .dash::before {
+  color: var(--on-dark-2);
+}
+
+@media (min-width: 56rem) {
+  .ask {
+    font-size: var(--step-4);
+    max-width: 20ch;
+  }
+  /* a resposta dela desloca-se para dentro: a alternância das duas vozes */
+  .say {
+    margin-left: clamp(0rem, 8vw, 7rem);
+  }
+}
+
+/* ─────────────────────────  passos (a resposta sobre mudança)  ───────────────────────── */
+
+.steps {
+  margin-top: var(--space-l);
+  padding: var(--space-m);
+  background: var(--green-tint);
+  border-radius: 2px;
+  max-width: var(--measure);
+}
+.steps__intro,
+.steps__outro {
+  font-size: var(--step--1);
+  color: var(--ink);
+  font-weight: 600;
+}
+.steps__list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-s) 0;
+  counter-reset: passo;
+  display: grid;
+  gap: var(--space-xs);
+}
+.steps__list li {
+  counter-increment: passo;
+  position: relative;
+  padding-left: 1.6rem;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.steps__list li::before {
+  content: counter(passo);
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--green-mid);
+}
+.steps__outro {
+  max-width: 42ch;
+  line-height: 1.6;
+}
+
+/* ─────────────────────────  sobre  ───────────────────────── */
+
+.about {
+  background: var(--paper-2);
+  border-block: 1px solid var(--rule);
+}
+.about__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter);
+  display: grid;
+  gap: var(--space-l);
+}
+.about__photo {
+  max-width: 20rem;
+}
+.about__photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: 50% 25%;
+  border-radius: 2px;
+}
+.about__text {
+  padding-left: var(--dash-w);
+}
+.about__role {
+  font-size: var(--step--1);
+  color: var(--green-mid);
+  font-weight: 600;
+  margin-bottom: var(--space-m);
+  margin-top: calc(var(--space-m) * -0.6);
+}
+.facts {
+  margin-top: var(--space-l);
+  border-top: 1px solid var(--rule);
+  max-width: var(--measure);
+}
+.facts__item {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.facts__item dt {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.25;
+  color: var(--green-mid);
+}
+.facts__item dd {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+@media (min-width: 56rem) {
+  .about__in {
+    grid-template-columns: minmax(0, 18rem) 1fr;
+    column-gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+}
+
+/* ─────────────────────────  pontos (dl em diálogo)  ───────────────────────── */
+
+.points {
+  margin-top: var(--space-l);
+  display: grid;
+  gap: var(--space-m);
+}
+.points__intro {
+  margin-top: var(--space-l);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink);
+}
+.points__item {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: var(--space-m);
+  border-bottom: 1px solid var(--rule);
+}
+.points__item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.points__item dt {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.3;
+  color: var(--ink);
+}
+.points__item dd {
+  margin: 0;
+  font-size: var(--step-0);
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+.points--onDark .points__item {
+  border-color: var(--rule-dark);
+}
+.points--onDark dt {
+  color: var(--on-dark);
+}
+.points--onDark dd {
+  color: var(--on-dark-2);
+}
+
+@media (min-width: 56rem) {
+  .points__item {
+    grid-template-columns: 13rem 1fr;
+    gap: var(--space-m);
+    align-items: baseline;
+  }
+  .points__item dt {
+    text-wrap: balance;
+  }
+}
+
+.note {
+  margin-top: var(--space-l);
+  padding-top: var(--space-s);
+  border-top: 1px solid var(--rule);
+  font-size: var(--step--1);
+  line-height: 1.65;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+/* ─────────────────────────  bloco verde escuro (a resposta dela)  ───────────────────────── */
+
+.band--green {
+  background: var(--green-dark);
+  color: var(--on-dark);
+}
+.band__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter);
+}
+@media (min-width: 56rem) {
+  .band__in .say {
+    margin-left: clamp(0rem, 8vw, 7rem);
+  }
+}
+
+/* ─────────────────────────  espaço / vínculo  ───────────────────────── */
+
+.space__panel {
+  margin-top: var(--space-m);
+  padding: var(--space-l) var(--space-m);
+  background: var(--green-tint);
+  border-radius: 2px;
+  max-width: var(--measure);
+}
+.space__lead {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.3;
+  color: var(--ink);
+  max-width: 18ch;
+  margin-bottom: var(--space-m);
+}
+.space__word {
+  margin-top: var(--space-l);
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  line-height: 1;
+  color: var(--green-mid);
+  opacity: 0.8; /* decorativo (aria-hidden), mas ainda ≥3:1 sobre a placa verde */
+  text-align: right;
+}
+
+/* ─────────────────────────  convite do meio  ───────────────────────── */
+
+.mid {
+  background: var(--green-tint);
+  border-block: 1px solid var(--rule);
+}
+.mid__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-l) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+  justify-content: center;
+}
+.mid .btn--quiet {
+  border-color: var(--green-mid);
+}
+
+/* ─────────────────────────  primeira sessão  ───────────────────────── */
+
+.first {
+  background: var(--paper-2);
+  border-block: 1px solid var(--rule);
+}
+.first__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter);
+  display: grid;
+  gap: var(--space-l);
+  align-items: center;
+}
+.first__text {
+  padding-left: var(--dash-w);
+}
+.first__title {
+  font-size: var(--step-4);
+  color: var(--ink);
+  margin-bottom: var(--space-m);
+  max-width: none;
+}
+.first__photo {
+  max-width: 18rem;
+}
+.first__photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: 50% 30%;
+  border-radius: 2px;
+}
+
+@media (min-width: 56rem) {
+  .first__in {
+    grid-template-columns: 1fr minmax(0, 16rem);
+    column-gap: clamp(2rem, 6vw, 5rem);
+  }
+}
+
+/* ─────────────────────────  citação (a fala mais alta)  ───────────────────────── */
+
+.quote {
+  background: var(--green-dark);
+  color: var(--on-dark);
+}
+.quote__in {
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--gutter);
+}
+.quote blockquote p {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  line-height: 1.24;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  max-width: 20ch;
+}
+/* a palavra sublinhada no azul da marca — o único traço de cor no bloco */
+.quote em {
+  font-style: normal;
+  position: relative;
+  white-space: nowrap;
+}
+.quote em::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 3px;
+  background: var(--blue);
+}
+.quote figcaption {
+  margin-top: var(--space-l);
+  font-size: var(--step--1);
+  color: var(--on-dark-2);
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 56rem) {
+  .quote blockquote p {
+    font-size: var(--step-5);
+    max-width: 18ch;
+    margin-left: 8%;
+  }
+  .quote figcaption {
+    margin-left: 8%;
+  }
+}
+
+/* ─────────────────────────  dúvidas: as perguntas de quem chega  ───────────────────────── */
+
+.faq {
+  background: var(--blue-tint);
+  border-block: 1px solid var(--rule);
+}
+.faq__in {
+  max-width: var(--col);
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter);
+}
+.faq__title {
+  font-size: var(--step-3);
+  color: var(--ink);
+  margin-bottom: var(--space-m);
+}
+.faq__list {
+  display: grid;
+  border-top: 1px solid var(--rule-blue);
+  max-width: calc(var(--measure) + var(--dash-w) + 4rem);
+}
+.faq__item {
+  border-bottom: 1px solid var(--rule-blue);
+}
+.faq__item summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  justify-content: space-between;
+  padding: var(--space-m) 0;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+.faq__item summary::-webkit-details-marker {
+  display: none;
+}
+.faq__q {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--step-1);
+  line-height: 1.35;
+  color: var(--blue-ink);
+  text-wrap: balance;
+}
+.faq__sign {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+.faq__sign::before,
+.faq__sign::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1.5px;
+  background: var(--blue-ink);
+}
+.faq__sign::after {
+  transform: rotate(90deg);
+  transition: transform 0.25s var(--ease-out-quart);
+}
+.faq__item[open] .faq__sign::after {
+  transform: rotate(0deg);
+}
+.faq__a {
+  display: grid;
+  grid-template-columns: var(--dash-w) 1fr;
+  align-items: baseline;
+  padding-bottom: var(--space-m);
+  font-size: var(--step-0);
+  line-height: 1.72;
+  color: var(--ink);
+  max-width: calc(var(--measure) + var(--dash-w));
+}
+.faq__a::before {
+  content: '—';
+  font-size: var(--step-0);
+  line-height: 1;
+  color: var(--green-mid);
+}
+
+@media (min-width: 56rem) {
+  .faq__in {
+    display: grid;
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+    column-gap: clamp(2rem, 5vw, 4rem);
+  }
+  .faq__list {
+    max-width: none;
+  }
+}
+
+/* ─────────────────────────  fechamento  ───────────────────────── */
+
+.closing {
+  background: var(--paper-2);
+  border-top: 1px solid var(--rule);
+}
+.closing__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-2xl) var(--gutter);
+}
+.closing__title {
+  font-size: var(--step-5);
+  letter-spacing: -0.02em;
+  max-width: 12ch;
+  color: var(--ink);
+}
+.closing__text {
+  margin-top: var(--space-m);
+  max-width: var(--measure);
+  font-size: var(--step-1);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.closing__actions {
+  margin-top: var(--space-l);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.closing__note {
+  margin-top: var(--space-s);
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────  rodapé  ───────────────────────── */
+
+.foot {
+  background: var(--green-dark);
+  color: var(--on-dark);
+}
+.foot__in {
+  max-width: var(--col);
+  margin-inline: auto;
+  padding: var(--space-xl) var(--gutter) calc(var(--space-xl) + 4.5rem);
+  display: grid;
+  gap: var(--space-m);
+}
+.foot__name {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+.foot__role,
+.foot__loc {
+  font-size: var(--step--1);
+  color: var(--on-dark-2);
+  margin-top: 0.35rem;
+}
+.foot__links {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.foot__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--step-0);
+  color: var(--on-dark);
+  text-decoration-color: var(--rule-dark);
+  text-underline-offset: 4px;
+}
+.foot__links a:hover {
+  text-decoration-color: currentColor;
+}
+
+@media (min-width: 56rem) {
+  .foot__in {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    padding-bottom: var(--space-xl);
+  }
+  .foot__links {
+    justify-items: end;
+  }
+}
+
+/* ─────────────────────────  barra do mobile  ───────────────────────── */
+
+.dock {
+  position: fixed;
+  z-index: var(--z-sticky);
+  inset: auto 0 0 0;
+  padding: 0.55rem var(--gutter) calc(0.55rem + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+}
+.dock__btn {
+  width: 100%;
+}
+@media (min-width: 62rem) {
+  .dock {
+    display: none;
+  }
+}
+
+/* ─────────────────────────  motion  ───────────────────────── */
+/* Mínimo e preciso: só a entrada do herói. Nada de reveal por scroll —
+   o conteúdo é visível por padrão, sempre. */
+@keyframes v4-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    animation: none;
+  }
+}
