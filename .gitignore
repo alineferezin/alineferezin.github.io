@@ -1,0 +1,7 @@
+# Materiais-fonte da Aline (grandes; ficam locais, não publicados)
+materials/
+
+# Lixo do Windows/WSL
+*:Zone.Identifier
+.DS_Store
+Thumbs.db

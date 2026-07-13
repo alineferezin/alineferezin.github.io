@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Aline Ferezin — Psicóloga</title>
+  <meta name="description" content="Aline Ferezin — psicóloga clínica, Terapia Cognitivo-Comportamental. Psicoterapia para adultos, online e presencial. Novo site em breve." />
+  <meta name="theme-color" content="#6c7a5c" />
+  <meta property="og:title" content="Aline Ferezin — Psicóloga" />
+  <meta property="og:description" content="Psicoterapia para adultos, online e presencial, com segurança e cuidado." />
+  <style>
+    :root{
+      --sage:#6c7a5c; --sage-deep:#5c6a4d; --cream:#f0ede2;
+      --cream-soft:#e6e2d3; --brown:#9c6a3a; --blue:#93a6c0;
+    }
+    *,*::before,*::after{ box-sizing:border-box; margin:0; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{
+      min-height:100dvh;
+      display:flex; flex-direction:column;
+      background:var(--sage); color:var(--cream);
+      font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+      -webkit-font-smoothing:antialiased;
+      line-height:1.5; overflow-x:hidden;
+      position:relative;
+    }
+    /* curvas orgânicas da marca (decorativas) */
+    .waves{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.5; }
+    .waves path{ fill:none; stroke:var(--cream); stroke-width:1.4; opacity:.35; }
+    .waves path.b{ stroke:var(--brown); opacity:.3; }
+
+    .wrap{
+      position:relative; z-index:1;
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center;
+      padding:2.5rem 1.5rem calc(2.5rem + env(safe-area-inset-bottom));
+      gap:1.5rem;
+    }
+
+    .brand{
+      display:inline-flex; flex-direction:column; align-items:center; gap:.55rem;
+      letter-spacing:.02em;
+    }
+    .mono{
+      width:3.4rem; height:3.4rem; border-radius:999px;
+      display:grid; place-items:center;
+      border:1.5px solid var(--cream); color:var(--cream);
+      font-size:1.7rem; font-weight:600;
+    }
+    .brand span{
+      font-family:'Helvetica Neue',Arial,sans-serif;
+      font-size:.72rem; font-weight:600; letter-spacing:.34em; text-transform:uppercase;
+      color:var(--cream-soft);
+    }
+
+    h1{
+      font-size:clamp(2.6rem,13vw,4.6rem);
+      font-weight:500; line-height:1.02; letter-spacing:-.01em;
+      text-wrap:balance; color:var(--cream);
+    }
+    h1 em{ font-style:italic; color:var(--blue); }
+
+    .role{
+      font-family:'Helvetica Neue',Arial,sans-serif;
+      font-size:clamp(.82rem,3.5vw,1rem); font-weight:500;
+      letter-spacing:.14em; text-transform:uppercase; color:var(--cream-soft);
+      max-width:22ch;
+    }
+    .lead{
+      font-size:clamp(1.05rem,4.6vw,1.35rem); line-height:1.5;
+      max-width:30ch; color:var(--cream);
+    }
+    .note{
+      margin-top:.5rem;
+      display:inline-flex; align-items:center; gap:.6rem;
+      font-family:'Helvetica Neue',Arial,sans-serif;
+      font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--cream-soft);
+      padding:.6rem 1.1rem; border-radius:999px;
+      border:1px solid rgba(240,237,226,.35); background:rgba(240,237,226,.08);
+    }
+    .note .dot{ width:.5rem; height:.5rem; border-radius:999px; background:var(--brown); animation:pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse{ 0%,100%{ opacity:.5; transform:scale(.85);} 50%{ opacity:1; transform:scale(1);} }
+
+    footer{
+      position:relative; z-index:1;
+      padding:1.25rem 1.5rem calc(1.25rem + env(safe-area-inset-bottom));
+      text-align:center;
+      font-family:'Helvetica Neue',Arial,sans-serif;
+      font-size:.72rem; letter-spacing:.06em; color:rgba(240,237,226,.6);
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .note .dot{ animation:none; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="waves" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M-20 120 C 80 60, 140 180, 240 120 S 420 60, 460 140" />
+    <path class="b" d="M-20 690 C 90 630, 150 750, 250 690 S 430 630, 470 710" />
+    <path d="M-40 420 C 40 380, 70 470, 150 430" opacity=".25" />
+  </svg>
+
+  <main class="wrap">
+    <div class="brand">
+      <span class="mono">a</span>
+      <span>Aline Ferezin</span>
+    </div>
+
+    <h1>Um espaço pra <em>mudar</em>.</h1>
+
+    <p class="role">Psicóloga clínica · Terapia Cognitivo-Comportamental</p>
+
+    <p class="lead">Psicoterapia para adultos, online e presencial, com segurança e cuidado.</p>
+
+    <span class="note"><span class="dot"></span> Novo site chegando</span>
+  </main>
+
+  <footer>Vila Nova de Gaia · Portugal</footer>
+</body>
+</html>
