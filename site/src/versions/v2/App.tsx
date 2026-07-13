@@ -6,7 +6,7 @@
  * do passadiço. As fotos são paradas no caminho; os blocos verdes densos são os
  * trechos de sombra. O conteúdo NUNCA depende da animação para existir.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { getContent } from '../../i18n'
 import { CONTACT, CREDENTIALS } from '../../config'
 import { PHOTOS, type Photo } from '../../shared/photos'
@@ -17,6 +17,23 @@ const whatsappHref = CONTACT.whatsapp(t.cta.whatsappMessage)
 
 /** Marca = duas primeiras palavras do nome legal. Nada de copy solta no JSX. */
 const WORDMARK = CREDENTIALS.fullName.split(' ').slice(0, 2).join(' ')
+
+/**
+ * Rótulos dos botões de divulgação progressiva (só existem no mobile).
+ *
+ * Isto é MICROCOPY DE INTERFACE — não é copy da marca: nenhuma frase do site
+ * mora aqui, todo o conteúdo continua vindo de `content/pt.ts`. Cada rótulo diz
+ * o que aquele botão abre naquela seção; nada de "Saiba mais" genérico repetido.
+ */
+const MORE = {
+  change: 'Ler o resto e os três passos',
+  about: 'Ler mais sobre a minha história',
+  work: 'Ver os outros pontos da abordagem',
+  space: 'Por que o vínculo importa',
+  session: 'Ver a estrutura da sessão',
+  first: 'O que acontece na primeira sessão',
+  less: 'Mostrar menos',
+} as const
 
 const SECTIONS = {
   about: 'sobre',
@@ -104,9 +121,18 @@ function Spine() {
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
+
+    /* Abrir/fechar um "Saiba mais" muda a altura do percurso: o SVG (height:100%)
+       se re-estica sozinho, mas a FRAÇÃO já pintada ficaria velha — a tinta
+       apareceria boiando ou cortada em relação ao trilho. Remedir na mudança. */
+    const ro =
+      'ResizeObserver' in window ? new ResizeObserver(() => onScroll()) : null
+    ro?.observe(walk)
+
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
+      ro?.disconnect()
       if (frame) cancelAnimationFrame(frame)
     }
   }, [])
@@ -178,6 +204,82 @@ function WhatsAppButton({ variant = 'solid' }: { variant?: 'solid' | 'invert' })
   )
 }
 
+/**
+ * Instagram: no celular é SÓ O ÍCONE (alvo de 48px, nome acessível intacto —
+ * o rótulo continua sendo `t.cta.instagram`, escondido só para o olho). No
+ * desktop o ícone some e o link volta a ser o texto de sempre.
+ */
+function InstagramLink({ dark = false }: { dark?: boolean }) {
+  return (
+    <a
+      className={`link-quiet ig${dark ? ' link-quiet--dark' : ''}`}
+      href={CONTACT.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t.cta.instagram}
+    >
+      <svg className="ig-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle className="ig-dot" cx="17.2" cy="6.8" r="1.1" />
+      </svg>
+      <span className="ig-text">{t.cta.instagram}</span>
+    </a>
+  )
+}
+
+/** O breakpoint do mobile — o mesmo do CSS. Fonte única para as duas pontas. */
+const MOBILE_Q = '(max-width: 767px)'
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_Q).matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_Q)
+    const sync = () => setMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return mobile
+}
+
+/**
+ * Divulgação progressiva — só no celular.
+ *
+ * No DESKTOP este componente é transparente: devolve os filhos como estão, sem
+ * botão e sem invólucro. O DOM (e o layout) do desktop fica idêntico ao que era.
+ *
+ * No MOBILE o miolo entra num bloco recolhido (continua no DOM) e um botão com
+ * `aria-expanded`/`aria-controls` abre no lugar — sem tirar a pessoa do contexto.
+ */
+function More({ label, children }: { label: string; children: ReactNode }) {
+  const mobile = useIsMobile()
+  const [open, setOpen] = useState(false)
+  const id = useId()
+
+  if (!mobile) return <>{children}</>
+
+  return (
+    <>
+      <div className={`more-body${open ? ' is-open' : ''}`} id={id}>
+        {children}
+      </div>
+      <button
+        type="button"
+        className="more-btn"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="more-mark" aria-hidden="true" />
+        {open ? MORE.less : label}
+      </button>
+    </>
+  )
+}
+
 type StopProps = {
   photo: Photo
   alt: string
@@ -216,10 +318,11 @@ function Stop({ photo, alt, className = '', sizes, hero }: StopProps) {
 export function App() {
   useReveal()
 
-  const heroRef = useRef<HTMLElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
   const [docked, setDocked] = useState(false)
 
-  // Barra de contato no mobile: só depois que o hero (com o botão) sai de cena.
+  // Barra de contato no mobile: só depois que o BLOCO DE TEXTO do hero (é ele
+  // quem tem o botão) sai de cena — não depois da foto, que vem bem depois.
   useEffect(() => {
     const hero = heroRef.current
     if (!hero || !('IntersectionObserver' in window)) return
@@ -264,8 +367,8 @@ export function App() {
         <Spine />
 
         {/* ---------------------------------------------------------- hero -- */}
-        <section className="hero" ref={heroRef} aria-labelledby="hero-h">
-          <div className="hero-copy">
+        <section className="hero" aria-labelledby="hero-h">
+          <div className="hero-copy" ref={heroRef}>
             <p className="hero-greeting">{t.hero.greeting}</p>
             <h1 id="hero-h">{t.hero.headline}</h1>
             <p className="hero-sub">{t.hero.subhead}</p>
@@ -295,23 +398,30 @@ export function App() {
             <h2 id="change-h" className="reveal">
               {t.change.title}
             </h2>
+            {/* Abertura sempre visível; o resto do bloco desce para o "saiba mais"
+                no celular (no desktop o <More> some e volta tudo a ser um só fluxo). */}
             <div className="prose reveal">
-              {t.change.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.change.paragraphs[0]}</p>
             </div>
-            <p className="change-question reveal">{t.change.question}</p>
-
-            <div className="steps-wrap reveal">
-              <p className="steps-intro">{t.change.stepsIntro}</p>
-              {/* Sequência real: consciência → aceitação → ação. Numerar aqui é honesto. */}
-              <ol className="steps">
-                {t.change.steps.map((s) => (
-                  <li key={s}>{s}</li>
+            <More label={MORE.change}>
+              <div className="prose prose--cont reveal">
+                {t.change.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
                 ))}
-              </ol>
-              <p className="steps-outro">{t.change.stepsOutro}</p>
-            </div>
+              </div>
+              <p className="change-question reveal">{t.change.question}</p>
+
+              <div className="steps-wrap reveal">
+                <p className="steps-intro">{t.change.stepsIntro}</p>
+                {/* Sequência real: consciência → aceitação → ação. Numerar aqui é honesto. */}
+                <ol className="steps">
+                  {t.change.steps.map((s) => (
+                    <li key={s}>{s}</li>
+                  ))}
+                </ol>
+                <p className="steps-outro">{t.change.stepsOutro}</p>
+              </div>
+            </More>
           </div>
         </section>
 
@@ -331,10 +441,15 @@ export function App() {
             </h2>
             <p className="about-role reveal">{t.about.role}</p>
             <div className="prose reveal">
-              {t.about.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.about.paragraphs[0]}</p>
             </div>
+            <More label={MORE.about}>
+              <div className="prose prose--cont reveal">
+                {t.about.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </div>
+            </More>
             <dl className="facts reveal">
               {t.about.facts.map((f) => (
                 <div key={f.value}>
@@ -354,12 +469,20 @@ export function App() {
             </h2>
             <p className="lead reveal">{t.work.intro}</p>
             <div className="points">
-              {t.work.points.map((p) => (
+              {t.work.points.slice(0, 1).map((p) => (
                 <article className="point reveal" key={p.title}>
                   <h3>{p.title}</h3>
                   <p>{p.text}</p>
                 </article>
               ))}
+              <More label={MORE.work}>
+                {t.work.points.slice(1).map((p) => (
+                  <article className="point reveal" key={p.title}>
+                    <h3>{p.title}</h3>
+                    <p>{p.text}</p>
+                  </article>
+                ))}
+              </More>
             </div>
           </div>
         </section>
@@ -397,11 +520,13 @@ export function App() {
               {t.space.title}
             </h2>
             <p className="space-lead reveal">{t.space.lead}</p>
-            <div className="prose reveal">
-              {t.space.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
-            </div>
+            <More label={MORE.space}>
+              <div className="prose reveal">
+                {t.space.paragraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </div>
+            </More>
             <p className="space-highlight reveal" aria-hidden="true">
               {t.space.highlight}
             </p>
@@ -417,17 +542,19 @@ export function App() {
             <p className="lead reveal">{t.session.lead}</p>
             <p className="session-format reveal">{t.session.format}</p>
 
-            <p className="stages-intro reveal">{t.session.structureTitle}</p>
-            {/* Segunda sequência real: os três momentos, na ordem em que acontecem. */}
-            <ol className="stages">
-              {t.session.structure.map((s) => (
-                <li className="reveal" key={s.title}>
-                  <h3>{s.title}</h3>
-                  <p>{s.text}</p>
-                </li>
-              ))}
-            </ol>
-            <p className="note reveal">{t.session.frequencyNote}</p>
+            <More label={MORE.session}>
+              <p className="stages-intro reveal">{t.session.structureTitle}</p>
+              {/* Segunda sequência real: os três momentos, na ordem em que acontecem. */}
+              <ol className="stages">
+                {t.session.structure.map((s) => (
+                  <li className="reveal" key={s.title}>
+                    <h3>{s.title}</h3>
+                    <p>{s.text}</p>
+                  </li>
+                ))}
+              </ol>
+              <p className="note reveal">{t.session.frequencyNote}</p>
+            </More>
           </div>
         </section>
 
@@ -438,20 +565,16 @@ export function App() {
               {t.first.title}
             </h2>
             <div className="prose prose--wide reveal">
-              {t.first.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.first.paragraphs[0]}</p>
+              <More label={MORE.first}>
+                {t.first.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </More>
             </div>
             <div className="first-actions reveal">
               <WhatsAppButton />
-              <a
-                className="link-quiet"
-                href={CONTACT.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t.cta.instagram}
-              </a>
+              <InstagramLink />
             </div>
           </div>
         </section>
@@ -503,14 +626,7 @@ export function App() {
             <p className="closing-text reveal">{t.closing.text}</p>
             <div className="closing-actions reveal">
               <WhatsAppButton variant="invert" />
-              <a
-                className="link-quiet link-quiet--dark"
-                href={CONTACT.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t.cta.instagram}
-              </a>
+              <InstagramLink dark />
             </div>
             <p className="note note--dark reveal">{t.cta.note}</p>
           </div>

@@ -11,8 +11,14 @@
  * O herói já é o primeiro turno: ela cumprimenta ("— Olá, boas vindas!") e, logo
  * abaixo, ainda na primeira dobra, entra a dúvida de quem chegou, em azul.
  *
- * Toda a copy vem de `content/pt.ts` — nada de texto solto no JSX.
+ * NO CELULAR, a fala dela COMEÇA e continua sob demanda: cada turno longo abre
+ * com o primeiro parágrafo e guarda o resto atrás de um "continuar lendo"
+ * (<details> nativo — o conteúdo nunca sai do DOM). No desktop (≥48rem) o
+ * <details> nasce aberto e o <summary> some: a página é exatamente a de sempre.
+ *
+ * Toda a copy de página vem de `content/pt.ts` — nada de texto solto no JSX.
  */
+import { useEffect, useState, type ReactNode } from 'react'
 import { CONTACT, CREDENTIALS } from '../../config'
 import { getContent } from '../../i18n'
 import { PHOTOS, type Photo } from '../../shared/photos'
@@ -20,6 +26,95 @@ import './v4.css'
 
 /** Wordmark derivado do nome oficial — sem copy inventada. */
 const WORDMARK = CREDENTIALS.fullName.split(' ').slice(0, 2).join(' ')
+
+/**
+ * Rótulos do controle de divulgação progressiva. São rótulos de CONTROLE (UI),
+ * não copy de página — por isso vivem aqui e não em `content/pt.ts`. Cada um diz
+ * o que abre, na voz da conversa. Se a V4 for a escolhida, promover para
+ * `cta.more` no content (com o par em `en.ts`).
+ */
+const MORE = {
+  close: 'Fechar',
+  change: 'Continuar lendo a resposta',
+  about: 'Continuar lendo sobre mim',
+  work: 'Ver os pontos da abordagem',
+  benefits: 'Ver os benefícios',
+  space: 'Continuar lendo',
+  session: 'Ver a estrutura da sessão',
+  first: 'Continuar lendo',
+}
+
+/** Breakpoint único da divulgação progressiva — casa com o CSS (48rem = 768px). */
+const DESKTOP_QUERY = '(min-width: 48rem)'
+
+function useDesktop() {
+  const [desktop, setDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY)
+    const sync = () => setDesktop(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return desktop
+}
+
+/**
+ * "Continuar lendo": a fala dela começa e segue sob demanda.
+ *
+ * - No celular: <details> fechado. O texto continua no DOM (Ctrl+F, leitor de
+ *   tela e busca acham); o <summary> nativo já anuncia expandido/recolhido.
+ * - No desktop: `open` e o <summary> escondido no CSS — nada muda.
+ *
+ * `gap` reproduz, no elemento <details>, a margem que o primeiro filho tinha
+ * quando era irmão direto — para o desktop ficar milimetricamente igual.
+ */
+function More({
+  label,
+  gap = 'flow',
+  onDark = false,
+  children,
+  open,
+}: {
+  label: string
+  gap?: 'flow' | 'block' | 'none'
+  onDark?: boolean
+  children: ReactNode
+  open: boolean
+}) {
+  return (
+    <details className={`more more--${gap}${onDark ? ' more--onDark' : ''}`} open={open}>
+      <summary className="more__sum">
+        <span className="more__txt more__txt--closed">{label}</span>
+        <span className="more__txt more__txt--open">{MORE.close}</span>
+        <span className="more__chev" aria-hidden="true" />
+      </summary>
+      <div className="more__body">{children}</div>
+    </details>
+  )
+}
+
+/** Instagram: no celular só o ícone (alvo de 48px); no desktop, o texto de sempre. */
+function InstagramLink({ label, className = '' }: { label: string; className?: string }) {
+  return (
+    <a
+      className={`btn btn--quiet btn--ig ${className}`.trim()}
+      href={CONTACT.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+    >
+      <svg className="btn__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5" />
+        <circle cx="12" cy="12" r="4.1" />
+        <circle cx="17.3" cy="6.7" r="1.15" className="btn__icon-dot" />
+      </svg>
+      <span className="btn__label">{label}</span>
+    </a>
+  )
+}
 
 function Foto({
   photo,
@@ -58,6 +153,7 @@ function Foto({
 export function App() {
   const t = getContent()
   const zap = CONTACT.whatsapp(t.cta.whatsappMessage)
+  const open = useDesktop()
 
   const Zap = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <a className={className} href={zap} target="_blank" rel="noopener noreferrer">
@@ -110,7 +206,7 @@ export function App() {
             <p className="hero__tagline">{t.hero.tagline}</p>
             <div className="hero__actions">
               <Zap className="btn btn--solid">{t.cta.primary}</Zap>
-              <a className="btn btn--quiet" href="#trabalho">
+              <a className="btn btn--quiet hero__second" href="#trabalho">
                 {t.cta.secondary}
               </a>
             </div>
@@ -129,22 +225,26 @@ export function App() {
 
           <div className="turn__in">
             <div className="say">
-              {t.change.paragraphs.map((p, i) => (
-                <p className={i === 0 ? 'say__p dash' : 'say__p'} key={i}>
-                  {p}
-                </p>
-              ))}
-              <p className="say__lead">{t.change.question}</p>
+              <p className="say__p dash">{t.change.paragraphs[0]}</p>
 
-              <div className="steps">
-                <p className="steps__intro">{t.change.stepsIntro}</p>
-                <ol className="steps__list">
-                  {t.change.steps.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ol>
-                <p className="steps__outro">{t.change.stepsOutro}</p>
-              </div>
+              <More label={MORE.change} gap="flow" open={open}>
+                {t.change.paragraphs.slice(1).map((p, i) => (
+                  <p className="say__p" key={i}>
+                    {p}
+                  </p>
+                ))}
+                <p className="say__lead">{t.change.question}</p>
+
+                <div className="steps">
+                  <p className="steps__intro">{t.change.stepsIntro}</p>
+                  <ol className="steps__list">
+                    {t.change.steps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ol>
+                  <p className="steps__outro">{t.change.stepsOutro}</p>
+                </div>
+              </More>
             </div>
           </div>
         </section>
@@ -155,7 +255,7 @@ export function App() {
             <Foto
               photo={PHOTOS.sorriso}
               alt={t.a11y.smileAlt}
-              sizes="(max-width: 56rem) 92vw, 18rem"
+              sizes="(max-width: 56rem) 14rem, 18rem"
               className="about__photo"
               eager
             />
@@ -164,11 +264,16 @@ export function App() {
                 {t.about.title}
               </h2>
               <p className="about__role">{t.about.role}</p>
-              {t.about.paragraphs.map((p, i) => (
-                <p className="say__p" key={i}>
-                  {p}
-                </p>
-              ))}
+              <p className="say__p">{t.about.paragraphs[0]}</p>
+
+              <More label={MORE.about} gap="flow" open={open}>
+                {t.about.paragraphs.slice(1).map((p, i) => (
+                  <p className="say__p" key={i}>
+                    {p}
+                  </p>
+                ))}
+              </More>
+
               <dl className="facts">
                 {t.about.facts.map((f) => (
                   <div className="facts__item" key={f.value}>
@@ -189,14 +294,17 @@ export function App() {
                 {t.work.title}
               </h2>
               <p className="say__p">{t.work.intro}</p>
-              <dl className="points">
-                {t.work.points.map((p) => (
-                  <div className="points__item" key={p.title}>
-                    <dt>{p.title}</dt>
-                    <dd>{p.text}</dd>
-                  </div>
-                ))}
-              </dl>
+
+              <More label={MORE.work} gap="block" open={open}>
+                <dl className="points">
+                  {t.work.points.map((p) => (
+                    <div className="points__item" key={p.title}>
+                      <dt>{p.title}</dt>
+                      <dd>{p.text}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </More>
             </div>
           </div>
         </section>
@@ -215,14 +323,17 @@ export function App() {
             <div className="band__in">
               <div className="say say--onDark">
                 <p className="say__lead dash">{t.benefits.intro}</p>
-                <dl className="points points--onDark">
-                  {t.benefits.items.map((it) => (
-                    <div className="points__item" key={it.title}>
-                      <dt>{it.title}</dt>
-                      <dd>{it.text}</dd>
-                    </div>
-                  ))}
-                </dl>
+
+                <More label={MORE.benefits} gap="block" onDark open={open}>
+                  <dl className="points points--onDark">
+                    {t.benefits.items.map((it) => (
+                      <div className="points__item" key={it.title}>
+                        <dt>{it.title}</dt>
+                        <dd>{it.text}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </More>
               </div>
             </div>
           </div>
@@ -237,14 +348,17 @@ export function App() {
               </h2>
               <div className="space__panel">
                 <p className="space__lead">{t.space.lead}</p>
-                {t.space.paragraphs.map((p, i) => (
-                  <p className="say__p" key={i}>
-                    {p}
+
+                <More label={MORE.space} gap="none" open={open}>
+                  {t.space.paragraphs.map((p, i) => (
+                    <p className="say__p" key={i}>
+                      {p}
+                    </p>
+                  ))}
+                  <p className="space__word" aria-hidden="true">
+                    {t.space.highlight}
                   </p>
-                ))}
-                <p className="space__word" aria-hidden="true">
-                  {t.space.highlight}
-                </p>
+                </More>
               </div>
             </div>
           </div>
@@ -254,14 +368,7 @@ export function App() {
         <aside className="mid" aria-label={t.cta.primary}>
           <div className="mid__in">
             <Zap className="btn btn--solid">{t.cta.primary}</Zap>
-            <a
-              className="btn btn--quiet"
-              href={CONTACT.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t.cta.instagram}
-            </a>
+            <InstagramLink label={t.cta.instagram} />
           </div>
         </aside>
 
@@ -274,16 +381,19 @@ export function App() {
               </h2>
               <p className="say__lead">{t.session.lead}</p>
               <p className="say__p">{t.session.format}</p>
-              <p className="points__intro">{t.session.structureTitle}</p>
-              <dl className="points">
-                {t.session.structure.map((s) => (
-                  <div className="points__item" key={s.title}>
-                    <dt>{s.title}</dt>
-                    <dd>{s.text}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="note">{t.session.frequencyNote}</p>
+
+              <More label={MORE.session} gap="block" open={open}>
+                <p className="points__intro">{t.session.structureTitle}</p>
+                <dl className="points">
+                  {t.session.structure.map((s) => (
+                    <div className="points__item" key={s.title}>
+                      <dt>{s.title}</dt>
+                      <dd>{s.text}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="note">{t.session.frequencyNote}</p>
+              </More>
             </div>
           </div>
         </section>
@@ -295,16 +405,20 @@ export function App() {
               <h2 className="first__title dash" id="primeira-h">
                 {t.first.title}
               </h2>
-              {t.first.paragraphs.map((p, i) => (
-                <p className={i === 0 ? 'say__lead' : 'say__p'} key={i}>
-                  {p}
-                </p>
-              ))}
+              <p className="say__lead">{t.first.paragraphs[0]}</p>
+
+              <More label={MORE.first} gap="none" open={open}>
+                {t.first.paragraphs.slice(1).map((p, i) => (
+                  <p className="say__p" key={i}>
+                    {p}
+                  </p>
+                ))}
+              </More>
             </div>
             <Foto
               photo={PHOTOS.palestra}
               alt={t.a11y.talkAlt}
-              sizes="(max-width: 56rem) 92vw, 16rem"
+              sizes="(max-width: 56rem) 12rem, 16rem"
               className="first__photo"
               eager
             />
@@ -354,14 +468,7 @@ export function App() {
             <p className="closing__text">{t.closing.text}</p>
             <div className="closing__actions">
               <Zap className="btn btn--solid btn--big">{t.cta.primary}</Zap>
-              <a
-                className="btn btn--quiet"
-                href={CONTACT.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t.cta.instagram}
-              </a>
+              <InstagramLink label={t.cta.instagram} className="btn--ig-big" />
             </div>
             <p className="closing__note">{t.cta.note}</p>
           </div>
@@ -390,7 +497,7 @@ export function App() {
         </div>
       </footer>
 
-      {/* Barra discreta no mobile — o convite sempre à mão. */}
+      {/* Barra discreta no mobile — o convite sempre à mão, na zona do polegar. */}
       <div className="dock">
         <Zap className="btn btn--solid dock__btn">{t.cta.primary}</Zap>
       </div>

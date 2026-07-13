@@ -16,6 +16,8 @@
   --ink-soft: var(--green-700); /* ~5.2:1 — ainda AA */
   --hair: oklch(0.5 0.035 133 / 0.24);
   --rule: var(--brown-500);
+  /* Tinta dos controles (saiba mais / links discretos) — AA em cada fundo. */
+  --more-ink: var(--brown-700);
 
   background: var(--green-50);
   color: var(--ink);
@@ -349,6 +351,7 @@
   --ink-soft: var(--green-100);
   --hair: oklch(0.92 0.014 133 / 0.28);
   --rule: var(--green-300);
+  --more-ink: var(--brown-200);
 }
 
 .band--deep {
@@ -358,6 +361,7 @@
   --ink-soft: var(--white);
   --hair: oklch(1 0 0 / 0.35);
   --rule: var(--brown-200);
+  --more-ink: var(--white);
 }
 
 .band h2 {
@@ -397,6 +401,11 @@
   max-width: 56ch;
   font-size: var(--step-1);
   line-height: 1.7;
+}
+/* Continuação de um bloco de prosa partido pelo "saiba mais": o respiro entre
+   os dois pedaços é o mesmo de `p + p`, então no desktop nada se mexe. */
+.prose--cont {
+  margin-top: 1.15em;
 }
 
 .note {
@@ -917,6 +926,241 @@ details[open] .faq-mark::after {
 }
 .link-quiet--dark:hover {
   color: var(--white);
+}
+
+/* --------------------------------------------------------- instagram ------ */
+/* No desktop, o link é o texto de sempre — o ícone nem aparece. */
+
+.ig-icon {
+  display: none;
+}
+.ig-icon rect,
+.ig-icon circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.ig-icon .ig-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ------------------------------------------------------- saiba mais ------- */
+/* Só existe no celular: no desktop o componente não renderiza botão nenhum e o
+   miolo volta a ser filho direto da seção (o `display: contents` abaixo é só
+   uma rede de segurança para o instante entre a 1ª pintura e o matchMedia). */
+
+@media (min-width: 768px) {
+  .more-btn {
+    display: none;
+  }
+  .more-body {
+    display: contents;
+  }
+}
+
+@media (max-width: 767px) {
+  .more-body {
+    display: none;
+  }
+  .more-body.is-open {
+    display: block;
+  }
+  /* O miolo aberto chega inteiro: o reveal por deslocamento não vale aqui
+     (o observer nunca viu estes nós — estavam recolhidos). */
+  .more-body .reveal {
+    transform: none;
+  }
+  /* Prosa partida: o pedaço de dentro respira igual a `p + p`. */
+  .prose .more-body > p {
+    margin-top: 1.15em;
+  }
+  .prose > .more-body {
+    margin: 0;
+  }
+
+  .more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: var(--space-m);
+    min-height: 48px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--more-ink);
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-align: left;
+    cursor: pointer;
+  }
+  /* Dentro da prosa o botão é bloco — senão encosta no parágrafo. */
+  .prose .more-btn,
+  .points .more-btn {
+    display: flex;
+  }
+  .points .more-btn {
+    margin-top: 0;
+    padding-top: var(--space-s);
+    border-top: 1px solid var(--hair);
+    width: 100%;
+  }
+
+  /* O mesmo sinal do FAQ: cruz que vira traço. Uma linguagem só para "abrir". */
+  .more-mark {
+    position: relative;
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+  .more-mark::before,
+  .more-mark::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto 0;
+    height: 2px;
+    background: currentColor;
+    transition: transform 0.35s var(--ease-out-quart);
+  }
+  .more-mark::after {
+    transform: rotate(90deg);
+  }
+  .more-btn[aria-expanded='true'] .more-mark::after {
+    transform: rotate(90deg) scaleX(0);
+  }
+}
+
+/* ========================================================================== */
+/* O CELULAR                                                                  */
+/* Não é o desktop encolhido: a primeira tela é só saudação + título + uma     */
+/* linha + o botão (na zona do polegar). A foto começa DEPOIS da dobra, e vem  */
+/* inteira — nada de fatia cortada no rodapé da tela. O resto de cada bloco    */
+/* espera atrás de um "saiba mais".                                            */
+/* ========================================================================== */
+
+@media (max-width: 767px) {
+  /* ---------------------------------------------------------------- hero -- */
+  .hero {
+    padding-top: 0;
+  }
+  .hero-copy {
+    /* A primeira tela é dela: o texto ocupa a altura útil (menos a barra do
+       topo) e a foto entra logo abaixo da dobra — inteira, quando se rola.
+       O texto fica centrado no vão; a deixa de rolagem ancora o pé da tela. */
+    position: relative;
+    min-height: calc(100svh - 64px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: none;
+    padding-block: var(--space-m) calc(var(--space-l) + 1.5rem);
+  }
+  .hero h1 {
+    font-size: var(--step-4);
+  }
+  .hero-sub {
+    margin-top: var(--space-s);
+    font-size: var(--step-1);
+    max-width: 28ch;
+  }
+  .hero-tag {
+    margin-top: var(--space-s);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+  /* O botão cai na zona do polegar — e no piso de 320×568 ainda sobra o pé da
+     tela para a deixa de rolagem. */
+  .hero-actions {
+    margin-top: var(--space-m);
+    gap: var(--space-s) var(--space-m);
+  }
+  /* Encosta no pé da primeira tela: em celular alto sobra espaço, e é ele quem
+     diz "tem mais aqui embaixo" — em vez de um vazio sem função. */
+  .hero-scroll {
+    position: absolute;
+    left: 0;
+    bottom: var(--space-m);
+    margin-top: 0;
+  }
+
+  /* -------------------------------------------------------------- ritmo --- */
+  /* Bandas mais curtas e títulos secundários um degrau abaixo: o bloco deixa
+     de ser um paredão e volta a caber na tela. */
+  .band {
+    padding-block: var(--space-xl);
+  }
+  .band h2 {
+    max-width: 16ch;
+  }
+  .first h2,
+  .closing h2 {
+    font-size: var(--step-3);
+  }
+  .change-question,
+  .space-lead {
+    font-size: var(--step-1);
+    max-width: 30ch;
+  }
+  .space-highlight {
+    font-size: var(--step-3);
+  }
+  .quote p {
+    font-size: var(--step-3);
+    max-width: 18ch;
+  }
+  .point h3,
+  .clearing h3,
+  .facts dt {
+    font-size: var(--step-1);
+  }
+  .clearings {
+    margin-top: var(--space-l);
+    gap: var(--space-l);
+  }
+  .facts {
+    margin-top: var(--space-l);
+  }
+  .points,
+  .steps-wrap {
+    margin-top: var(--space-l);
+  }
+  .stages-intro {
+    margin-top: var(--space-m);
+  }
+  .faq-list summary h3 {
+    font-size: var(--step-0);
+  }
+
+  /* ------------------------------------------------ pontos + saiba mais --- */
+  /* Recolhido, quem fecha a lista é a régua do próprio botão; aberto, é a
+     borda do último ponto — nunca as duas ao mesmo tempo. */
+  .more-body.is-open + .more-btn {
+    border-top: 0;
+    padding-top: 0;
+    margin-top: var(--space-s);
+  }
+
+  /* ---------------------------------------------------------- instagram -- */
+  /* Só o ícone (o nome acessível continua vindo de `t.cta.instagram`). */
+  .ig {
+    justify-content: center;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    text-decoration: none;
+  }
+  .ig-icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+  }
+  .ig-text {
+    display: none;
+  }
 }
 
 /* ------------------------------------------------------- barra do mobile -- */

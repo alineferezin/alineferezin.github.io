@@ -4,6 +4,7 @@ materials/
 # Dependências e cache de build
 node_modules/
 .vite/
+.build-root/
 
 # Lixo do Windows/WSL
 *:Zone.Identifier

@@ -13,7 +13,8 @@
     "fonts": "node scripts/fonts.mjs",
     "photos": "node scripts/photos.mjs",
     "entries": "node scripts/entries.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "promote": "node scripts/promote.mjs"
   },
   "dependencies": {
     "react": "^19.2.7",

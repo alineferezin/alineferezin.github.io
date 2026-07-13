@@ -7,12 +7,24 @@
  *
  * Toda a copy vem de src/content — nada de texto solto aqui.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { getContent } from '../../i18n'
 import { CONTACT, CREDENTIALS } from '../../config'
 import { PHOTOS, type Photo } from '../../shared/photos'
-import { CurveFlow, CurveFlowAlt, CurveThread, CurveUnderline, Monogram } from './Curves'
+import {
+  CurveFlow,
+  CurveFlowAlt,
+  CurveThread,
+  CurveUnderline,
+  InstagramGlyph,
+  Monogram,
+} from './Curves'
 import './App.css'
+
+/** Rótulos de interface (não são copy da página — a copy vem toda de content/pt.ts). */
+const UI = {
+  less: 'Mostrar menos',
+}
 
 function Picture({
   photo,
@@ -51,20 +63,78 @@ function Picture({
   )
 }
 
+/**
+ * Botão de "saiba mais" — divulgação progressiva, SÓ no celular.
+ *
+ * O conteúdo continua no DOM sempre. No celular ele nasce recolhido e o botão
+ * (com `aria-expanded`/`aria-controls`) o abre no lugar. A partir de 48rem o
+ * botão some do layout e o corpo vira `display: contents` — os filhos voltam a
+ * ser filhos diretos do container, então grids e `.prose` do desktop continuam
+ * exatamente como eram. Nenhum estado de JS interfere no desktop.
+ */
+function MoreButton({
+  label,
+  open,
+  onToggle,
+  controls,
+}: {
+  label: string
+  open: boolean
+  onToggle: () => void
+  controls: string
+}) {
+  return (
+    <button
+      type="button"
+      className="more__toggle"
+      aria-expanded={open}
+      aria-controls={controls}
+      onClick={onToggle}
+    >
+      <span>{open ? UI.less : label}</span>
+      <span className="more__sign" aria-hidden="true" />
+    </button>
+  )
+}
+
+/** Corpo recolhível + botão. Use quando o trecho escondido é um bloco contínuo. */
+function More({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  return (
+    <>
+      <div className="more__body" id={id} data-open={open}>
+        {children}
+      </div>
+      <MoreButton label={label} open={open} onToggle={() => setOpen(!open)} controls={id} />
+    </>
+  )
+}
+
 export function App() {
   const t = getContent()
   const whatsapp = CONTACT.whatsapp(t.cta.whatsappMessage)
 
+  /** A lista de pontos do "como trabalho" é um <ul> só: recolhe por CSS, não por wrapper. */
+  const [workOpen, setWorkOpen] = useState(false)
+  const workId = useId()
+
   /** Barra de ação fixa no mobile: só aparece depois que o hero sai de cena.
-   *  Não é conteúdo — o CTA do hero e o do fim existem independentes disto. */
+   *  Não é conteúdo — o CTA do hero e o do fim existem independentes disto.
+   *
+   *  `!isIntersecting` sozinho é ambíguo: vale tanto para o sentinela ACIMA da
+   *  janela (já rolamos) quanto ABAIXO dela (ainda nem chegamos). Sem o teste de
+   *  `top < 0` a barra nascia ligada e duplicava o "Vamos conversar?" do herói
+   *  na mesma tela. */
   const heroEnd = useRef<HTMLDivElement>(null)
   const [pastHero, setPastHero] = useState(false)
   useEffect(() => {
     const sentinel = heroEnd.current
     if (!sentinel) return
-    const io = new IntersectionObserver(([e]) => setPastHero(!e.isIntersecting), {
-      rootMargin: '0px',
-    })
+    const io = new IntersectionObserver(
+      ([e]) => setPastHero(!e.isIntersecting && e.boundingClientRect.top < 0),
+      { rootMargin: '0px' },
+    )
     io.observe(sentinel)
     return () => io.disconnect()
   }, [])
@@ -77,6 +147,21 @@ export function App() {
       rel="noopener noreferrer"
     >
       {t.cta.primary}
+    </a>
+  )
+
+  /** No celular vira só o ícone (52×52); o rótulo continua no aria-label e volta
+   *  a aparecer como texto a partir de 48rem. */
+  const InstagramCta = () => (
+    <a
+      className="btn btn--ghost btn--insta"
+      href={CONTACT.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t.cta.instagram}
+    >
+      <InstagramGlyph />
+      <span className="btn__label">{t.cta.instagram}</span>
     </a>
   )
 
@@ -119,6 +204,10 @@ export function App() {
           </div>
           <div className="hero__scrim" aria-hidden="true" />
 
+          {/* No celular a ordem visual é: saudação → título → subhead → CTA → tagline.
+              A tagline desce (CSS `order`) para não empurrar o CTA fora da mão em
+              tela curta. No desktop o container volta a ser `block` e a ordem do DOM
+              — que é a de leitura — manda. */}
           <div className="wrap hero__inner">
             <p className="hero__greeting">{t.hero.greeting}</p>
             <h1 className="hero__headline">{t.hero.headline}</h1>
@@ -126,14 +215,7 @@ export function App() {
             <p className="hero__tagline">{t.hero.tagline}</p>
             <div className="hero__actions">
               <Cta />
-              <a
-                className="btn btn--ghost"
-                href={CONTACT.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t.cta.instagram}
-              </a>
+              <InstagramCta />
             </div>
             <p className="hero__scrollhint">{t.hero.scroll}</p>
           </div>
@@ -151,9 +233,12 @@ export function App() {
               {t.change.title}
             </h2>
             <div className="prose ga-prose">
-              {t.change.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.change.paragraphs[0]}</p>
+              <More label="Ler mais: e como se muda?">
+                {t.change.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </More>
             </div>
 
             <p className="change__question ga-aside">{t.change.question}</p>
@@ -189,9 +274,12 @@ export function App() {
                 {t.about.title}
               </h2>
               <div className="prose">
-                {t.about.paragraphs.map((p) => (
-                  <p key={p}>{p}</p>
-                ))}
+                <p>{t.about.paragraphs[0]}</p>
+                <More label="Ler mais sobre mim">
+                  {t.about.paragraphs.slice(1).map((p) => (
+                    <p key={p}>{p}</p>
+                  ))}
+                </More>
               </div>
               <dl className="facts">
                 {t.about.facts.map((f) => (
@@ -224,7 +312,9 @@ export function App() {
           </div>
 
           <div className="wrap">
-            <ul className="points">
+            {/* Uma lista só — no celular os itens 2+ recolhem por CSS (data-open),
+                sem quebrar o <ul> em dois nem tirar nada do DOM. */}
+            <ul className="points" id={workId} data-open={workOpen}>
               {t.work.points.map((p) => (
                 <li className="points__item" key={p.title}>
                   <h3>{p.title}</h3>
@@ -232,6 +322,12 @@ export function App() {
                 </li>
               ))}
             </ul>
+            <MoreButton
+              label="Ver os outros pontos da abordagem"
+              open={workOpen}
+              onToggle={() => setWorkOpen(!workOpen)}
+              controls={workId}
+            />
             <div className="work__cta">
               <Cta />
               <p className="note">{t.cta.note}</p>
@@ -266,9 +362,11 @@ export function App() {
             </h2>
             <p className="space__lead sp-lead">{t.space.lead}</p>
             <div className="prose sp-prose">
-              {t.space.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <More label="Ler sobre o vínculo">
+                {t.space.paragraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </More>
             </div>
             <p className="space__highlight sp-mark">
               <span className="marked">
@@ -288,19 +386,23 @@ export function App() {
             <p className="lead sg-lead">{t.session.lead}</p>
             <p className="session__format sg-format">{t.session.format}</p>
 
-            <h3 className="session__subtitle sg-sub">{t.session.structureTitle}</h3>
-            <div className="steps__body session__structure sg-list">
-              <CurveThread className="curve--steps" />
-              <ol className="structure">
-                {t.session.structure.map((s) => (
-                  <li key={s.title}>
-                    <strong>{s.title}</strong>
-                    <span>{s.text}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <p className="note note--rule sg-note">{t.session.frequencyNote}</p>
+            {/* O corpo recolhível vira `display: contents` a partir de 48rem: os três
+                filhos voltam a ser itens do grid e as áreas sg-* seguem valendo. */}
+            <More label="Ver a estrutura da sessão">
+              <h3 className="session__subtitle sg-sub">{t.session.structureTitle}</h3>
+              <div className="steps__body session__structure sg-list">
+                <CurveThread className="curve--steps" />
+                <ol className="structure">
+                  {t.session.structure.map((s) => (
+                    <li key={s.title}>
+                      <strong>{s.title}</strong>
+                      <span>{s.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <p className="note note--rule sg-note">{t.session.frequencyNote}</p>
+            </More>
           </div>
         </section>
 
@@ -312,9 +414,12 @@ export function App() {
               {t.first.title}
             </h2>
             <div className="prose prose--center">
-              {t.first.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.first.paragraphs[0]}</p>
+              <More label="Ler o que esperar do primeiro encontro">
+                {t.first.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </More>
             </div>
             <Cta />
           </div>
@@ -370,14 +475,7 @@ export function App() {
             <p className="closing__text">{t.closing.text}</p>
             <div className="closing__actions">
               <Cta />
-              <a
-                className="btn btn--ghost"
-                href={CONTACT.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t.cta.instagram}
-              </a>
+              <InstagramCta />
             </div>
           </div>
         </section>

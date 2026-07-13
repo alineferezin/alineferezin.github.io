@@ -190,6 +190,91 @@
   border-color: var(--white);
 }
 
+/* Instagram: no celular só o glifo (alvo de 48px); no desktop, o texto de sempre. */
+.btn__icon {
+  display: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btn__icon-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ─────────────────────────  "continuar lendo": a fala segue sob demanda  ───────────────────────── */
+/* Só existe no celular. No desktop (≥48rem) o <details> nasce aberto (React) e o
+   <summary> some — a página é a mesma de sempre, sem controle nenhum.
+   As margens de `.more--*` reproduzem, no <details>, a margem que o primeiro
+   filho tinha quando era irmão direto: o desktop não desloca um pixel. */
+
+.more {
+  display: block;
+}
+.more__body > :first-child {
+  margin-top: 0;
+}
+.more--flow {
+  margin-top: var(--space-s);
+}
+.more--block {
+  margin-top: var(--space-l);
+}
+.more--none {
+  margin-top: 0;
+}
+
+.more__sum {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--green-mid);
+}
+.more__sum::-webkit-details-marker {
+  display: none;
+}
+.more__txt {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+.more__txt--open {
+  display: none;
+}
+.more[open] .more__txt--closed {
+  display: none;
+}
+.more[open] .more__txt--open {
+  display: inline;
+}
+/* seta: desce para abrir, sobe para fechar */
+.more__chev {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 0.25s var(--ease-out-quart);
+}
+.more[open] .more__chev {
+  transform: translateY(0.1em) rotate(-135deg);
+}
+/* dentro do bloco verde escuro a voz dela é clara */
+.more--onDark .more__sum {
+  color: var(--on-dark);
+}
+
 /* ─────────────────────────  herói: a primeira fala dela  ───────────────────────── */
 
 .hero {
@@ -971,6 +1056,184 @@
 @media (min-width: 62rem) {
   .dock {
     display: none;
+  }
+}
+
+/* ─────────────────────────  ≥ 768px: a página de sempre  ───────────────────────── */
+/* Tudo aberto, nenhum controle: o <details> vem com `open` (React) e o resumo some. */
+
+@media (min-width: 48rem) {
+  .more__sum {
+    display: none;
+  }
+  /* cinto e suspensório: se o JS não tiver casado o media query, o motor ainda
+     mostra o conteúdo do <details> (Chrome 131+/Safari 18.4+/Firefox 139+). */
+  .more::details-content {
+    content-visibility: visible;
+  }
+  .btn--ig .btn__icon {
+    display: none;
+  }
+}
+
+/* ─────────────────────────  < 768px: o celular  ───────────────────────── */
+/* A conversa cabe na tela curta (320×568, 375×667): o tipo desce de degrau, o
+   respiro encolhe, e cada turno longo começa e continua sob demanda. */
+
+@media (max-width: 47.99rem) {
+  .v4 {
+    /* travessão mais justo: 20px de traço em coluna de 28,8px */
+    --dash-w: 1.8rem;
+  }
+
+  /* topo: a marca vira alvo de toque de verdade */
+  .top__mark {
+    min-height: 44px;
+    align-content: center;
+  }
+
+  /* ── herói: retrato + saudação + título + convite, e o azul já espia ── */
+  .hero {
+    padding-block: 0.85rem 0.85rem;
+  }
+  .hero__speaker {
+    gap: 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+  .hero__photo img {
+    width: 3rem;
+    height: 3rem;
+  }
+  .hero__greeting {
+    font-size: var(--step-1);
+  }
+  /* continua sendo o tipo mais alto da página — mas cabe. Encontra a escala do
+     desktop exatamente em 768px (56,6px), sem degrau na virada. */
+  .hero__headline {
+    font-size: clamp(2rem, 0.9rem + 5.5vw, 3.55rem);
+    line-height: 1.06;
+    max-width: 15ch;
+  }
+  .hero__subhead {
+    font-size: var(--step-1);
+    line-height: 1.35;
+    max-width: 26ch;
+    margin-top: 0.5rem;
+  }
+  .hero__tagline {
+    margin-top: 0.5rem;
+    line-height: 1.5;
+    max-width: none;
+  }
+  .hero__actions {
+    align-items: center;
+    gap: 0.4rem 0.65rem;
+    margin-top: 0.85rem;
+  }
+  .hero__actions .btn--solid {
+    padding-inline: 1.25rem;
+  }
+  /* a ação secundária do herói é uma âncora, não uma segunda oferta: perde a
+     cápsula e vira um link discreto ao lado do convite */
+  .hero__second {
+    min-height: 44px;
+    padding: 0 0.25rem;
+    border: 0;
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    text-decoration-color: var(--rule);
+  }
+
+  /* ── ritmo: as faixas paravam de respirar e passavam a pesar ── */
+  .askband__in {
+    padding-block: 1.35rem 1.5rem;
+  }
+  .turn__in {
+    padding-block: var(--space-l) var(--space-l);
+  }
+  .about__in,
+  .band__in,
+  .first__in,
+  .faq__in {
+    padding-block: var(--space-l);
+  }
+  .mid__in {
+    padding-block: var(--space-m);
+  }
+  .quote__in,
+  .closing__in {
+    padding-block: var(--space-xl);
+  }
+  .foot__in {
+    padding-block: var(--space-l) calc(var(--space-l) + 4.5rem);
+  }
+
+  /* ── tipo: a assinatura da V4 é tipo grande, mas grande PRA TELA ── */
+  .quote blockquote p {
+    font-size: var(--step-3);
+    max-width: 24ch;
+  }
+  .closing__title {
+    font-size: var(--step-4);
+    max-width: 14ch;
+  }
+  .closing__text {
+    font-size: var(--step-0);
+  }
+  .first__title {
+    font-size: var(--step-3);
+  }
+  .space__word {
+    font-size: var(--step-3);
+    margin-top: var(--space-m);
+  }
+  .space__panel {
+    padding: var(--space-m);
+  }
+  .facts__item {
+    grid-template-columns: 1fr;
+  }
+
+  /* fotos: retrato de corpo inteiro em 320px de largura era um cartaz */
+  .about__photo {
+    max-width: 14rem;
+  }
+  .first__photo {
+    max-width: 12rem;
+  }
+
+  /* ── a fala continua sob demanda ── */
+  .more,
+  .more--flow,
+  .more--block,
+  .more--none {
+    margin-top: var(--space-s);
+  }
+  .more[open] .more__body {
+    margin-top: var(--space-s);
+  }
+
+  /* ── Instagram: só o ícone ── */
+  .btn--ig {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 0;
+    flex: none;
+  }
+  .btn--ig .btn__icon {
+    display: block;
+  }
+  .btn--ig .btn__label {
+    display: none;
+  }
+  .btn--ig-big {
+    width: 56px;
+    min-width: 56px;
+    height: 56px;
   }
 }
 

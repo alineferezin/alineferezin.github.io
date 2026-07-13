@@ -46,13 +46,16 @@ body {
   margin-top: var(--space-m);
 }
 
-.prose > p {
+/* Descendente, não filho direto: no celular os parágrafos extras vivem dentro do
+   `.more__body`, e a partir de 48rem esse body vira `display: contents`. Em ambos
+   os casos o conjunto de <p> atingido é o mesmo — não há <p> aninhado aqui. */
+.prose p {
   /* ~70 caracteres reais: o "ch" do Montserrat é largo, 68ch dariam ~85. */
   max-width: 56ch;
   margin-top: var(--space-m);
 }
 
-.prose--center > p {
+.prose--center p {
   margin-inline: auto;
 }
 
@@ -132,6 +135,49 @@ body {
   background: oklch(1 0 0 / 0.1);
 }
 
+/* Instagram — no celular é só o ícone: um botão inteiro de texto é peso morto
+   ao lado do CTA principal. O nome acessível vem do aria-label (t.cta.instagram),
+   então o rótulo visível pode sair sem custo para leitor de tela. */
+.btn--insta {
+  flex: none;
+  gap: 0.6rem;
+  width: 3.25rem; /* 52px — acima dos 44 de alvo mínimo */
+  height: 3.25rem;
+  padding: 0;
+}
+.btn--insta .btn__label {
+  display: none;
+}
+.glyph {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.glyph__dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+@media (min-width: 48rem) {
+  /* Desktop: volta a ser exatamente o botão de texto que já era. */
+  .btn--insta {
+    width: auto;
+    height: auto;
+    min-height: 3.25rem;
+    padding: 0.9rem 1.6rem;
+  }
+  .btn--insta .glyph {
+    display: none;
+  }
+  .btn--insta .btn__label {
+    display: inline;
+  }
+}
+
 /* ---------------------------------------------------------------- curvas */
 
 .curve {
@@ -160,6 +206,12 @@ body {
 .curve--hero {
   bottom: -1px;
   z-index: 2;
+  height: 5rem; /* no celular o herói é curto: a curva alta subia por cima do CTA */
+}
+@media (min-width: 48rem) {
+  .curve--hero {
+    height: 9rem;
+  }
 }
 .curve--benefits {
   top: -4.5rem;
@@ -303,34 +355,44 @@ body {
   }
 }
 
-/* ------------------------------------------------------------------ hero */
+/* ------------------------------------------------------------------ hero
+   CELULAR — a foto é um BLOCO no topo, o texto vive num campo verde ABAIXO.
+   As duas zonas são disjuntas: por construção, nenhuma linha de texto pode
+   cair sobre o rosto dela, em nenhuma altura de tela. É o oposto da versão
+   anterior (foto full-bleed com o texto por cima), que em tela curta — iPhone
+   SE, 375×667 — subia e tapava a cara da Aline.
+
+   DESKTOP (≥48rem) — volta a ser o herói full-bleed de sempre. Lá sobra altura,
+   o rosto fica à direita e a fala à esquerda; nada disso muda. */
 
 .hero {
+  --hero-band: clamp(13rem, 44svh, 26rem); /* altura da faixa da foto */
+
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
   display: flex;
-  align-items: flex-end;
-  padding-top: 6rem;
-  padding-bottom: var(--space-xl);
+  flex-direction: column;
+  /* Reserva a faixa onde a curva vive — senão ela cruza a tagline. */
+  padding-bottom: 5.5rem;
   background: var(--deep);
   isolation: isolate;
 }
 
 .hero__media {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
+  position: relative;
+  z-index: 0;
+  height: var(--hero-band);
   isolation: isolate;
   overflow: hidden;
 }
 
+/* A foto é 3:4 e ela ocupa ~18–42% da altura. Ancorada no topo, o teto
+   desfocado fica sob a barra de navegação e o rosto cai inteiro na faixa. */
 .hero__picture,
 .hero__picture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 16%;
+  object-position: 50% 2%;
 }
 
 /* Puxa a foto pro mundo verde sem lavar o rosto dela. */
@@ -342,94 +404,157 @@ body {
   opacity: 0.42;
 }
 
+/* A foto dissolve no campo verde — sem corte reto, sem véu sobre o rosto. */
+.hero__media::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(
+    180deg,
+    oklch(0.34 0.028 133 / 0) 0%,
+    oklch(0.34 0.028 133 / 0.55) 55%,
+    var(--green-900) 100%
+  );
+}
+
+/* O véu de leitura só existe quando o texto está SOBRE a foto — no desktop. */
 .hero__scrim {
+  display: none;
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* Ela ocupa 18–41% da altura: o véu abre no rosto e fecha onde o texto entra. */
-  background: linear-gradient(
-    180deg,
-    oklch(0.34 0.028 133 / 0.6) 0%,
-    oklch(0.34 0.028 133 / 0.2) 20%,
-    oklch(0.34 0.028 133 / 0.32) 36%,
-    oklch(0.34 0.028 133 / 0.8) 52%,
-    oklch(0.34 0.028 133 / 0.95) 72%,
-    var(--green-900) 90%
-  );
 }
 
 .hero__inner {
   position: relative;
   z-index: 1;
-}
-
-/* Em telas baixas a foto não tem sobra vertical pra deslocar: o texto encosta
-   nela. A sombra garante a leitura sem escurecer o rosto com mais véu. */
-.hero__greeting,
-.hero__subhead,
-.hero__tagline {
-  text-shadow: 0 1px 16px oklch(0.34 0.028 133 / 0.85);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--space-s);
 }
 
 .hero__greeting {
   font-family: var(--font-display);
   font-size: var(--step-1);
+  line-height: 1.2;
   color: var(--warm-ink);
-  margin-bottom: var(--space-2xs);
+  margin-bottom: 0.25rem;
 }
 
 .hero__headline {
-  font-size: var(--step-5);
+  font-size: var(--step-4);
   line-height: 1;
   color: var(--ink-strong);
   max-width: 11ch;
-  text-shadow: 0 2px 30px oklch(0.34 0.028 133 / 0.55);
 }
 
 .hero__subhead {
-  margin-top: var(--space-m);
-  font-size: var(--step-1);
+  margin-top: var(--space-s);
+  font-size: var(--step-0);
+  line-height: 1.45;
   color: var(--ink-strong);
-  max-width: 26ch;
+  max-width: 30ch;
 }
 
+/* Desce para depois do CTA no celular (order): em tela curta a hierarquia é
+   saudação → título → uma linha → botão. A tagline continua visível, logo
+   abaixo — nada de `display: none`, nada some do DOM nem do leitor de tela. */
 .hero__tagline {
-  margin-top: var(--space-xs);
-  font-size: var(--step-0);
+  order: 1;
+  margin-top: var(--space-m);
+  font-size: var(--step--1);
   color: var(--ink);
   max-width: 38ch;
 }
 
 .hero__actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-s);
-  margin-top: var(--space-l);
+  margin-top: var(--space-m);
+}
+/* O CTA principal ocupa a largura útil; o Instagram é o ícone ao lado. */
+.hero__actions .btn--solid {
+  flex: 1 1 auto;
 }
 
 .hero__scrollhint {
   display: none;
 }
 
-/* iPhone SE e afins: um degrau a menos de tipo devolve respiro sobre o rosto. */
-@media (max-width: 24rem) {
+@media (min-width: 48rem) {
+  /* ---- herói do desktop: exatamente o que era antes. ---- */
   .hero {
-    padding-top: 5rem;
+    min-height: 100vh;
+    min-height: 100svh;
+    flex-direction: row;
+    align-items: flex-end;
+    padding-top: 6rem;
+    padding-bottom: var(--space-xl);
+  }
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    height: auto;
+  }
+  .hero__media::after {
+    display: none;
+  }
+  .hero__picture,
+  .hero__picture img {
+    object-position: 50% 16%;
+  }
+  .hero__scrim {
+    display: block;
+    /* Ela ocupa 18–41% da altura: o véu abre no rosto e fecha onde o texto entra. */
+    background: linear-gradient(
+      180deg,
+      oklch(0.34 0.028 133 / 0.6) 0%,
+      oklch(0.34 0.028 133 / 0.2) 20%,
+      oklch(0.34 0.028 133 / 0.32) 36%,
+      oklch(0.34 0.028 133 / 0.8) 52%,
+      oklch(0.34 0.028 133 / 0.95) 72%,
+      var(--green-900) 90%
+    );
+  }
+  .hero__inner {
+    display: block;
+    padding-top: 0;
+  }
+  /* Sobre a foto, a sombra devolve a leitura sem escurecer o rosto com mais véu. */
+  .hero__greeting,
+  .hero__subhead,
+  .hero__tagline {
+    text-shadow: 0 1px 16px oklch(0.34 0.028 133 / 0.85);
+  }
+  .hero__greeting {
+    line-height: 1.6;
+    margin-bottom: var(--space-2xs);
   }
   .hero__headline {
-    font-size: var(--step-4);
+    font-size: var(--step-6);
+    text-shadow: 0 2px 30px oklch(0.34 0.028 133 / 0.55);
   }
   .hero__subhead {
+    margin-top: var(--space-m);
+    font-size: var(--step-1);
+    line-height: 1.6;
+    max-width: 26ch;
+  }
+  .hero__tagline {
+    order: 0;
+    margin-top: var(--space-xs);
     font-size: var(--step-0);
   }
   .hero__actions {
-    margin-top: var(--space-m);
+    flex-wrap: wrap;
+    margin-top: var(--space-l);
   }
-}
-
-@media (min-width: 48rem) {
-  .hero__headline {
-    font-size: var(--step-6);
+  .hero__actions .btn--solid {
+    flex: none;
   }
   .hero__scrollhint {
     display: block;
@@ -520,7 +645,7 @@ body {
   color: var(--ink-strong); /* sobre #67735c só branco passa 4,5:1 */
 }
 .section--mid .note,
-.section--mid .prose > p {
+.section--mid .prose p {
   color: var(--white);
 }
 /* Sobre #67735c o marrom-claro cai pra ~3,9:1 — texto pequeno vai de branco. */
@@ -961,7 +1086,7 @@ body {
   max-width: none;
   margin-inline: auto;
 }
-.first .prose > p {
+.first .prose p {
   max-width: 42ch;
 }
 .first .btn {
@@ -1139,6 +1264,102 @@ body {
   }
 }
 
+/* --------------------------------------------- "saiba mais" (só no celular)
+   Divulgação progressiva: o celular abre com a abertura do assunto e o resto
+   entra a pedido. O texto NUNCA sai do DOM — só recolhe, com `aria-expanded`
+   dizendo ao leitor de tela que há mais ali e que dá para abrir.
+
+   A partir de 48rem o botão sai do layout e o corpo vira `display: contents`:
+   os filhos voltam a ser filhos diretos do container (grid do `session`,
+   `.prose` do `change`/`about`/`first`), e o desktop fica idêntico ao que era. */
+
+.more__body[data-open='false'] {
+  display: none;
+}
+.more__body[data-open='true'] {
+  display: block;
+}
+
+.more__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.875rem; /* 46px de alvo */
+  margin-top: var(--space-m);
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--warm-ink);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+}
+.more__toggle > span:first-child {
+  border-bottom: 1px solid var(--warm);
+  padding-bottom: 2px;
+}
+
+/* O mesmo "+" das perguntas frequentes — um só vocabulário de abrir/fechar. */
+.more__sign {
+  position: relative;
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.more__sign::before,
+.more__sign::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1.5px;
+  background: var(--warm);
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.more__sign::after {
+  transform: rotate(90deg);
+}
+.more__toggle[aria-expanded='true'] .more__sign::after {
+  transform: rotate(0deg);
+}
+
+/* Sobre o verde #67735c o marrom-claro cai pra ~3,9:1 — ali o rótulo vai de branco. */
+.section--mid .more__toggle {
+  color: var(--white);
+}
+.section--mid .more__toggle > span:first-child,
+.section--mid .more__sign::before,
+.section--mid .more__sign::after {
+  border-color: var(--white);
+  background: var(--white);
+}
+.section--mid .more__toggle > span:first-child {
+  background: none;
+}
+
+/* A lista de pontos do "como trabalho" recolhe sem virar duas listas. */
+.points[data-open='false'] .points__item:nth-child(n + 2) {
+  display: none;
+}
+.points + .more__toggle {
+  margin-top: var(--space-l);
+}
+
+@media (min-width: 48rem) {
+  .more__body,
+  .more__body[data-open='false'],
+  .more__body[data-open='true'] {
+    display: contents;
+  }
+  .more__toggle {
+    display: none;
+  }
+  .points[data-open='false'] .points__item:nth-child(n + 2) {
+    display: block;
+  }
+}
+
 /* ------------------------------------------------------- barra fixa (mobile) */
 
 .stickybar {
@@ -1166,6 +1387,74 @@ body {
 @media (min-width: 48rem) {
   .stickybar {
     display: none;
+  }
+}
+
+/* ------------------------------------------------- afinação do celular
+   Um passe só entre 320 e 414: nada de título ocupando meia tela, nada de
+   bloco gigante sem respiro. Escopo fechado abaixo de 48rem — o desktop,
+   que estava bom, não é tocado por nenhuma regra daqui. */
+
+@media (max-width: 24rem) {
+  /* 320×568: a faixa cede altura pro campo verde, senão o CTA cola no rodapé da dobra. */
+  .hero {
+    --hero-band: clamp(11rem, 40svh, 26rem);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .section {
+    padding-block: 3.25rem;
+  }
+
+  /* Alvo de toque da marca no topo (era 165×36). */
+  .brandmark {
+    min-height: 2.875rem;
+  }
+
+  /* Um degrau abaixo: no celular o step-2 (25px) fazia cada item virar manchete. */
+  .points__item h3,
+  .rows__row dt,
+  .facts__item dt,
+  .steps__list li,
+  .structure strong {
+    font-size: var(--step-1);
+  }
+
+  .change__question {
+    margin-top: var(--space-l);
+    font-size: var(--step-2);
+  }
+  .space__lead,
+  .space__highlight {
+    font-size: var(--step-3);
+  }
+  .closing__title {
+    font-size: var(--step-4);
+  }
+  .quote blockquote p {
+    font-size: var(--step-2);
+  }
+
+  /* Respiro interno: o ritmo do desktop (xl = até 5rem) é grande demais aqui. */
+  .steps,
+  .about__text,
+  .facts,
+  .points,
+  .rows,
+  .work__cta,
+  .session__subtitle,
+  .work__photo {
+    margin-top: var(--space-l);
+  }
+
+  /* O fio vertical dos passos comia 2,5rem dos 280 disponíveis. */
+  .steps__body {
+    padding-left: 2rem;
+  }
+  .steps__list li::before,
+  .structure li::before {
+    left: -2rem;
   }
 }
 

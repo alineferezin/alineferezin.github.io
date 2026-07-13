@@ -78,6 +78,22 @@ export function CurveUnderline({ className }: Props) {
   )
 }
 
+/** Glifo do Instagram — no celular o botão vira só o ícone (rótulo no aria-label). */
+export function InstagramGlyph({ className }: Props) {
+  return (
+    <svg
+      className={`glyph ${className ?? ''}`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle className="glyph__dot" cx="17.2" cy="6.8" r="1.15" />
+    </svg>
+  )
+}
+
 /** Monograma "a" da marca, aberto por uma curva. */
 export function Monogram({ className }: Props) {
   return (

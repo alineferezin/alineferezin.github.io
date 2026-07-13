@@ -2,10 +2,16 @@
  * Screenshots de validação (Chrome headless via puppeteer-core).
  *
  *   node scripts/shots.mjs <url> <outDir> [prefixo]
- *   node scripts/shots.mjs http://localhost:5173/v1/ /tmp/shots v1
  *
- * Gera <prefixo>-390.png (mobile), -768.png (tablet), -1440.png (desktop), página inteira.
- * Também imprime erros de console e imagens quebradas — falha silenciosa é o inimigo.
+ * Para CADA viewport gera DOIS arquivos:
+ *   <prefixo>-<W>x<H>-fold.png  → só a primeira dobra (o que a pessoa vê ao abrir)
+ *   <prefixo>-<W>-full.png      → página inteira
+ *
+ * A dobra é o que importa: captura de página inteira ESCONDE o defeito de tela
+ * curta (o texto que sobe e tapa o rosto no iPhone SE só aparece no fold).
+ *
+ * Também acusa: erro de console, imagem quebrada, overflow horizontal e alvo de
+ * toque menor que 44px. Exit ≠ 0 = tem bug.
  */
 import { mkdirSync, readdirSync, existsSync } from 'node:fs'
 import { execSync } from 'node:child_process'
@@ -17,7 +23,6 @@ if (!url) {
   process.exit(1)
 }
 
-// Node 20 não tem fs.globSync — resolvemos o binário lendo o diretório de versões.
 const cacheDir = `${process.env.HOME}/.cache/puppeteer/chrome-headless-shell`
 const version = existsSync(cacheDir) ? readdirSync(cacheDir).sort().pop() : null
 const executablePath = version && `${cacheDir}/${version}/chrome-headless-shell-linux64/chrome-headless-shell`
@@ -27,54 +32,76 @@ if (!executablePath || !existsSync(executablePath)) {
 }
 
 // O chrome-headless-shell precisa de libasound.so.2, que não vem no WSL.
-// Extraída sem sudo em scratchpad/chrome/libs (ver docs/BUILD-TOOLKIT.md §1).
 const libDir = execSync(
   'find /tmp/claude-* -maxdepth 10 -type d -path "*chrome/libs/usr/lib/x86_64-linux-gnu" 2>/dev/null | head -1',
   { shell: '/bin/bash' },
 )
   .toString()
   .trim()
-if (libDir) {
-  process.env.LD_LIBRARY_PATH = [libDir, process.env.LD_LIBRARY_PATH].filter(Boolean).join(':')
-}
+if (libDir) process.env.LD_LIBRARY_PATH = [libDir, process.env.LD_LIBRARY_PATH].filter(Boolean).join(':')
 
 mkdirSync(outDir, { recursive: true })
 
+/**
+ * Celulares reais primeiro. O SE (375×667) é o caso que quebra: tela CURTA.
+ * Se a primeira dobra funciona nele, funciona em qualquer celular.
+ */
+const VIEWPORTS = [
+  { w: 320, h: 568, dsf: 2, nome: 'iPhone SE 1ª ger — o piso' },
+  { w: 375, h: 667, dsf: 2, nome: 'iPhone SE 2/3 — tela curta' },
+  { w: 390, h: 844, dsf: 2, nome: 'iPhone 14/15' },
+  { w: 414, h: 896, dsf: 2, nome: 'iPhone Plus/Max' },
+  { w: 768, h: 1024, dsf: 1, nome: 'tablet' },
+  { w: 1440, h: 900, dsf: 1, nome: 'desktop' },
+]
+
 const browser = await puppeteer.launch({
   executablePath,
-  args: ['--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--force-prefers-reduced-motion=0'],
+  args: ['--no-sandbox', '--disable-gpu', '--hide-scrollbars'],
 })
 
 const problems = []
-const VIEWPORTS = [
-  { w: 390, h: 844, dsf: 2 }, // iPhone
-  { w: 768, h: 1024, dsf: 1 },
-  { w: 1440, h: 900, dsf: 1 },
-]
 
-for (const { w, h, dsf } of VIEWPORTS) {
+for (const { w, h, dsf, nome } of VIEWPORTS) {
   const page = await browser.newPage()
   page.on('console', (m) => m.type() === 'error' && problems.push(`[console ${w}] ${m.text()}`))
   page.on('pageerror', (e) => problems.push(`[pageerror ${w}] ${e.message}`))
   page.on('requestfailed', (r) => problems.push(`[404 ${w}] ${r.url()}`))
   await page.setViewport({ width: w, height: h, deviceScaleFactor: dsf })
   await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 })
-  await new Promise((r) => setTimeout(r, 1200)) // deixa a animação de entrada terminar
+  await new Promise((r) => setTimeout(r, 1200)) // animação de entrada termina
 
-  // Overflow horizontal é bug de responsivo — pega antes do print.
   const overflow = await page.evaluate(() => {
     const el = document.scrollingElement
     return el.scrollWidth > el.clientWidth + 1 ? `${el.scrollWidth}px > ${el.clientWidth}px` : null
   })
-  if (overflow) problems.push(`[overflow-x ${w}] documento rola na horizontal: ${overflow}`)
+  if (overflow) problems.push(`[overflow-x ${w}] rola na horizontal: ${overflow}`)
 
   const broken = await page.evaluate(() =>
     [...document.images].filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.currentSrc || i.src),
   )
   broken.forEach((src) => problems.push(`[img quebrada ${w}] ${src}`))
 
-  await page.screenshot({ path: `${outDir}/${prefix}-${w}.png`, fullPage: true })
-  console.log(`✓ ${outDir}/${prefix}-${w}.png`)
+  // Alvo de toque: só no celular, e só o que está visível.
+  if (w <= 430) {
+    const small = await page.evaluate(() => {
+      const out = []
+      for (const el of document.querySelectorAll('a, button, summary, [role="button"], [role="tab"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.height === 0) continue
+        if (getComputedStyle(el).visibility === 'hidden') continue
+        if (r.height < 44 || r.width < 44) {
+          out.push(`${el.tagName.toLowerCase()}.${el.className || '—'} ${Math.round(r.width)}×${Math.round(r.height)}`)
+        }
+      }
+      return out.slice(0, 6)
+    })
+    small.forEach((s) => problems.push(`[toque <44px ${w}] ${s}`))
+  }
+
+  await page.screenshot({ path: `${outDir}/${prefix}-${w}x${h}-fold.png` })
+  await page.screenshot({ path: `${outDir}/${prefix}-${w}-full.png`, fullPage: true })
+  console.log(`✓ ${w}×${h} (${nome})`)
   await page.close()
 }
 
@@ -85,5 +112,6 @@ if (problems.length) {
   problems.forEach((p) => console.log('  ' + p))
   process.exitCode = 1
 } else {
-  console.log('\n✓ sem erros de console, sem imagem quebrada, sem overflow horizontal')
+  console.log('\n✓ sem erro de console, sem imagem quebrada, sem overflow-x, sem alvo de toque < 44px')
+  console.log('  (o automático passou — agora OLHE os *-fold.png, principalmente 375×667)')
 }
