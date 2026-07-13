@@ -2,6 +2,11 @@
  * V3 — "Consultório". Mobile-first.
  * Cor: verde escuro na placa da foto; superfície de leitura clara tintada de
  * verde; azul da marca como estado (item ativo, links, foco); marrom pontual.
+ *
+ * Duas leituras da mesma placa:
+ *  - mobile  → foto de altura contida + faixa verde com a identidade (rosto livre,
+ *              e sobra viewport pro conteúdo espiar embaixo = affordance de rolagem);
+ *  - ≥1024px → a placa vira a coluna fixa da esquerda, com a identidade em overlay.
  */
 
 .v3 {
@@ -28,60 +33,66 @@
 
 /* ---------------------------------------------------------------- placa --- */
 
+/* Mobile: foto por cima, faixa sólida embaixo. Nada de texto sobre o rosto. */
 .plate {
   position: relative;
-  height: 100dvh;
-  min-height: 32rem;
+  display: flex;
+  flex-direction: column;
   background: var(--green-900);
   overflow: hidden;
 }
 
+.plate__photo {
+  flex: none;
+  /* Contida de propósito: a placa NÃO é 100dvh. O `- 6rem` reserva a faixa da
+     identidade, então em tela curta (iPhone SE) ainda sobra viewport pro início
+     do conteúdo espiar sob a dobra — é essa espiada que diz "dá pra rolar". */
+  height: clamp(10rem, calc(52svh - 6rem), 20rem);
+}
 .plate__photo,
 .plate__photo img {
   width: 100%;
+}
+.plate__photo img {
   height: 100%;
   object-fit: cover;
-  object-position: 50% 24%;
+  object-position: 50% 14%;
 }
 
 .plate__mark {
   position: absolute;
-  top: var(--gutter);
+  top: var(--space-s);
   left: var(--gutter);
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 50%;
   background: color-mix(in oklab, var(--green-900) 55%, transparent);
   backdrop-filter: blur(4px);
   color: var(--white);
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   line-height: 1;
   padding-bottom: 0.15em;
 }
 
 .plate__scrim {
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--space-l) var(--gutter) calc(var(--bar-h) + var(--space-2xs));
+  /* Sobe sobre a barra da foto (ombro/fundo, nunca o rosto) e derrete no verde. */
+  margin-top: -3.5rem;
+  padding: 3.5rem var(--gutter) var(--space-s);
   color: var(--white);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--green-900) 45%, transparent) 0%,
-      transparent 22%,
-      transparent 40%,
-      color-mix(in oklab, var(--green-900) 72%, transparent) 66%,
-      color-mix(in oklab, var(--green-900) 96%, transparent) 100%
-    );
+  background: linear-gradient(
+    180deg,
+    transparent 0,
+    color-mix(in oklab, var(--green-900) 45%, transparent) 1.2rem,
+    color-mix(in oklab, var(--green-900) 88%, transparent) 2.6rem,
+    var(--green-900) 3.5rem
+  );
 }
 
 .plate__greeting {
@@ -92,16 +103,17 @@
 
 .plate__name {
   font-family: var(--font-display);
-  font-size: var(--step-4);
+  font-size: var(--step-3);
   line-height: 1.05;
   letter-spacing: -0.015em;
-  margin-top: 0.15em;
+  margin-top: 0.1em;
 }
 
 .plate__role {
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   font-size: var(--step--1);
   font-weight: 500;
+  line-height: 1.45;
   color: var(--white);
 }
 
@@ -116,7 +128,7 @@
 }
 
 .plate__scroll {
-  margin-top: var(--space-s);
+  margin-top: var(--space-xs);
   font-size: var(--step--1);
   color: var(--gray-200);
   display: flex;
@@ -131,12 +143,21 @@
   opacity: 0.7;
 }
 
+/* Tela curtíssima (iPhone SE): a espiada do conteúdo já é a affordance de rolagem
+   — a dica escrita vira só altura. Some, e o headline cabe inteiro na dobra. */
+@media (max-height: 620px) and (max-width: 767px) {
+  .plate__scroll {
+    display: none;
+  }
+}
+
 /* --------------------------------------------------------------- botões --- */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   min-height: 48px;
   padding: 0.8rem 1.35rem;
   border-radius: 999px;
@@ -169,6 +190,12 @@
   border-color: var(--green-700);
 }
 
+.ig {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+}
+
 /* Sobre a foto e sobre a barra escura, o primário inverte. */
 .plate .btn--primary,
 .bar .btn--primary {
@@ -179,14 +206,12 @@
 .bar .btn--primary:hover {
   background: var(--green-100);
 }
-.plate .btn--ghost,
-.bar .btn--ghost {
+.plate .btn--ghost {
   border-color: rgba(255, 255, 255, 0.6);
   color: var(--white);
   background: transparent;
 }
-.plate .btn--ghost:hover,
-.bar .btn--ghost:hover {
+.plate .btn--ghost:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: var(--white);
 }
@@ -199,20 +224,40 @@
   bottom: 0;
   z-index: var(--z-sticky);
   display: flex;
+  align-items: center;
   gap: 0.6rem;
-  padding: 0.7rem var(--gutter) calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.65rem var(--gutter) calc(0.65rem + env(safe-area-inset-bottom, 0px));
   background: color-mix(in oklab, var(--green-900) 94%, transparent);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
-.bar .btn {
-  flex: 1 1 auto;
-  min-height: 46px;
-  padding-inline: 0.75rem;
-  font-size: var(--step--1);
-}
 .bar .btn--primary {
-  flex-grow: 2;
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding-inline: 0.75rem;
+}
+
+/* Ação secundária no mobile = só o ícone (o rótulo vive no aria-label). */
+.bar__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  color: var(--white);
+  transition:
+    background-color 0.2s var(--ease-out-quart),
+    border-color 0.2s var(--ease-out-quart);
+}
+.bar__icon:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--white);
+}
+.bar__icon .ig {
+  width: 1.45rem;
+  height: 1.45rem;
 }
 
 /* --------------------------------------------------------------- painel --- */
@@ -272,10 +317,90 @@
   border-bottom-color: var(--blue-500);
 }
 
+/* ------------------------------------------- divulgação progressiva (mobile) --- */
+
+/* O resto continua no DOM; o mobile fechado só não o desenha. A partir de 768px
+   o botão some e tudo abre — o desktop lê exatamente como sempre leu. */
+.more__rest {
+  display: none;
+}
+.more.is-open > .more__rest {
+  display: block;
+}
+
+.more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 48px;
+  margin-top: var(--space-m);
+  padding: 0.7rem 1.15rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--green-900);
+  font-family: inherit;
+  font-size: var(--step--1);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease-out-quart),
+    border-color 0.2s var(--ease-out-quart);
+}
+.more__btn::after {
+  content: '';
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid var(--blue-500);
+  border-bottom: 2px solid var(--blue-500);
+  rotate: 45deg;
+  translate: 0 -0.15rem;
+  transition: rotate 0.2s var(--ease-out-quart);
+}
+.more.is-open .more__btn::after {
+  rotate: -135deg;
+  translate: 0 0.15rem;
+}
+.more__btn:hover {
+  background: var(--green-100);
+  border-color: var(--green-500);
+}
+
+/* Continuação de um bloco de texto: o mesmo respiro de parágrafo. */
+.prose--cont,
+.prose .more__rest > p:first-child {
+  margin-top: 1em;
+}
+.more__rest > p + p {
+  margin-top: 1em;
+}
+
+/* Listas que o mobile corta na primeira linha (o resto fica no DOM, escondido). */
+.rows.is-clamped > li:nth-child(n + 2),
+.benefits.is-clamped > .benefit:nth-child(n + 2) {
+  display: none;
+}
+
+/* Na faixa escura, o botão veste branco. */
+.block--dark .more__btn {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: var(--white);
+}
+.block--dark .more__btn::after {
+  border-color: var(--brown-200);
+}
+.block--dark .more__btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--white);
+}
+
 /* --------------------------------------------------------------- blocos --- */
 
 .block {
-  padding: var(--space-xl) var(--gutter);
+  padding: var(--space-l) var(--gutter);
   scroll-margin-top: var(--nav-h);
   border-top: 1px solid var(--line);
 }
@@ -318,9 +443,9 @@
   color: var(--ink-2);
 }
 
-/* abertura */
+/* abertura — encosta na placa: o headline é o que espia sob a dobra */
 .block--start {
-  padding-block: var(--space-l) var(--space-xl);
+  padding-block: var(--space-s) var(--space-l);
 }
 .start__headline {
   font-size: var(--step-4);
@@ -602,7 +727,7 @@
   background: var(--green-900);
   color: var(--white);
   border-top: 0;
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl);
 }
 .block--quote blockquote {
   max-width: var(--measure);
@@ -687,7 +812,7 @@
 /* fechamento */
 .block--closing {
   background: var(--card);
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl);
 }
 .closing__title {
   font-family: var(--font-display);
@@ -715,7 +840,7 @@
 
 /* rodapé */
 .foot {
-  padding: var(--space-xl) var(--gutter) calc(var(--bar-h) + var(--space-xl));
+  padding: var(--space-l) var(--gutter) calc(var(--bar-h) + var(--space-l));
   border-top: 1px solid var(--line);
   background: var(--surface);
 }
@@ -762,6 +887,46 @@
 .foot__handle {
   font-weight: 400;
   color: var(--ink-2);
+}
+
+/* ------------------------------------------------- tablet e acima (≥768px) --- */
+
+/* Fim da divulgação progressiva: nada dobrado, nenhum botão — leitura corrida. */
+@media (min-width: 768px) {
+  .more__btn {
+    display: none;
+  }
+  .more__rest {
+    display: block;
+  }
+  /* Mesma especificidade do corte, senão o `:nth-child` ganharia e o desktop
+     ficaria com a lista cortada. */
+  .rows.is-clamped > li:nth-child(n + 2),
+  .benefits.is-clamped > .benefit:nth-child(n + 2) {
+    display: revert;
+  }
+
+  /* Volta o ritmo largo dos blocos. */
+  .block {
+    padding-block: var(--space-xl);
+  }
+  .block--start {
+    padding-block: var(--space-l) var(--space-xl);
+  }
+  .block--quote,
+  .block--closing {
+    padding-block: var(--space-2xl);
+  }
+  .foot {
+    padding-block: var(--space-xl) calc(var(--bar-h) + var(--space-xl));
+  }
+
+  .plate__photo {
+    height: clamp(20rem, 46svh, 30rem);
+  }
+  .plate__name {
+    font-size: var(--step-4);
+  }
 }
 
 /* --------------------------------------------- container: painel mais largo --- */
@@ -838,15 +1003,34 @@
     min-height: 0;
   }
 
+  /* A placa volta a ser placa: foto de parede inteira, identidade em overlay. */
   .plate {
+    display: block;
     height: 100dvh;
     min-height: 0;
   }
+  .plate__photo {
+    height: 100%;
+  }
   .plate__photo,
   .plate__photo img {
+    height: 100%;
     object-position: 50% 20%;
   }
+  .plate__mark {
+    top: var(--gutter);
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.35rem;
+  }
   .plate__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: 0;
     padding: var(--space-l) clamp(1.75rem, 3vw, 2.75rem) clamp(2rem, 4vh, 3rem);
     background: linear-gradient(
       180deg,
@@ -858,7 +1042,11 @@
     );
   }
   .plate__name {
+    margin-top: 0.15em;
     font-size: var(--step-3);
+  }
+  .plate__role {
+    margin-top: 0.5rem;
   }
   .plate__actions {
     display: flex;
@@ -921,7 +1109,8 @@
   .is-revealing {
     animation: none;
   }
-  .btn:hover {
+  .btn:hover,
+  .more__btn:hover {
     transform: none;
   }
 }

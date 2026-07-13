@@ -17,7 +17,7 @@
  *  - reveal de scroll: SÓ transform (translateY). Se o observer nunca disparar,
  *    o conteúdo continua legível — o reveal enriquece, não revela.
  */
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { getContent } from '../../i18n'
 import { CONTACT, CREDENTIALS } from '../../config'
 import { PHOTOS, type Photo } from '../../shared/photos'
@@ -28,6 +28,26 @@ const whatsappHref = CONTACT.whatsapp(t.cta.whatsappMessage)
 
 /** Delay escalonado do reveal, via custom property. */
 const d = (i: number) => ({ '--d': i }) as CSSProperties
+
+/** Recuo em degrau dos benefícios (desktop). Substitui o :nth-child(), que
+ *  quebraria com os itens embrulhados no <More> do celular. */
+const indent = (i: number) => ({ '--indent': i }) as CSSProperties
+
+/**
+ * Rótulos do "Saiba mais" — chrome de interface, SÓ no celular (o desktop nunca
+ * os mostra). A copy do site continua 100% em `content/pt.ts`: estes rótulos são
+ * do mesmo naipe dos `aria-label` de navegação já usados aqui. Cada um diz o que
+ * abre — nada de "Saiba mais" solto.
+ */
+const MORE = {
+  change: 'Saiba mais sobre a mudança',
+  about: 'Saiba mais sobre mim',
+  work: 'Ver os outros pontos',
+  benefits: 'Ver os outros benefícios',
+  space: 'Saiba mais sobre o vínculo',
+  session: 'Ver a estrutura da sessão',
+  first: 'Saiba mais sobre a primeira sessão',
+}
 
 function Picture({
   photo,
@@ -75,6 +95,25 @@ function ArrowIcon() {
   )
 }
 
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+      />
+      <circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="17.2" cy="6.8" r="1.25" fill="currentColor" />
+    </svg>
+  )
+}
+
 function PrimaryCta({ label = t.cta.primary, block = false }: { label?: string; block?: boolean }) {
   return (
     <a
@@ -86,6 +125,68 @@ function PrimaryCta({ label = t.cta.primary, block = false }: { label?: string; 
       {label}
       <ArrowIcon />
     </a>
+  )
+}
+
+/**
+ * Ação secundária. No CELULAR é só o ícone (círculo de 56px — bem acima dos
+ * 44px de alvo mínimo); o rótulo volta a aparecer a partir de 768px. O
+ * `aria-label` está sempre lá, então o leitor de tela nunca fica sem o nome.
+ */
+function InstagramCta() {
+  return (
+    <a
+      className="v5-btn v5-btn--ghost v5-btn--icon"
+      href={CONTACT.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t.cta.instagram}
+    >
+      <InstagramIcon />
+      <span className="v5-btn__label">{t.cta.instagram}</span>
+    </a>
+  )
+}
+
+/**
+ * Divulgação progressiva — SÓ no celular.
+ *
+ * O conteúdo nunca sai do DOM. No celular fica atrás de um botão com
+ * `aria-expanded`; fechado, o corpo é `visibility: hidden` (some da árvore de
+ * acessibilidade e do tab order, mas continua no HTML). No desktop o CSS mata o
+ * botão e devolve o corpo a `display: contents` — os filhos voltam a ser filhos
+ * diretos do layout de sempre, como se o <More> não existisse.
+ *
+ * O reveal por IntersectionObserver não dispara em elemento de altura zero, então
+ * ao abrir marcamos o conteúdo como "entrado" na mão — senão os fios (scaleX(0))
+ * e o translateY do rise ficariam presos.
+ */
+function More({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const id = useId()
+
+  useEffect(() => {
+    if (!open) return
+    bodyRef.current?.querySelectorAll('[data-rise]').forEach((el) => el.classList.add('is-in'))
+  }, [open])
+
+  return (
+    <div className={`v5-more${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="v5-more__toggle"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>{label}</span>
+        <span className="v5-more__sign" aria-hidden="true" />
+      </button>
+      <div className="v5-more__body" id={id} ref={bodyRef}>
+        <div className="v5-more__inner">{children}</div>
+      </div>
+    </div>
   )
 }
 
@@ -271,9 +372,12 @@ export function App() {
               <p className="v5-hero__tagline v5-in" style={d(3)}>
                 {t.hero.tagline}
               </p>
+              {/* No celular a ação secundária é um link discreto (não outra
+                  pílula de 56px): dois botões cheios empurravam o CTA pra fora
+                  da tela do iPhone SE. No desktop ela volta a ser pílula. */}
               <div className="v5-hero__actions v5-in" style={d(4)}>
                 <PrimaryCta />
-                <a className="v5-btn v5-btn--ghost" href="#trabalho">
+                <a className="v5-btn v5-btn--ghost v5-hero__link" href="#trabalho">
                   {t.cta.secondary}
                 </a>
               </div>
@@ -298,11 +402,16 @@ export function App() {
           </h2>
           <div className="v5-change">
             <div className="v5-prose">
-              {t.change.paragraphs.map((p, i) => (
-                <p key={i} className={i === 0 ? 'v5-lead' : undefined} data-rise style={d(i)}>
-                  {p}
-                </p>
-              ))}
+              <p className="v5-lead" data-rise>
+                {t.change.paragraphs[0]}
+              </p>
+              <More label={MORE.change}>
+                {t.change.paragraphs.slice(1).map((p, i) => (
+                  <p key={i} data-rise style={d(i)}>
+                    {p}
+                  </p>
+                ))}
+              </More>
             </div>
             <p className="v5-question" data-rise>
               {t.change.question}
@@ -342,11 +451,16 @@ export function App() {
                 {t.about.role}
               </p>
               <div className="v5-prose">
-                {t.about.paragraphs.map((p, i) => (
-                  <p key={i} data-rise style={d(i + 1)}>
-                    {p}
-                  </p>
-                ))}
+                <p data-rise style={d(1)}>
+                  {t.about.paragraphs[0]}
+                </p>
+                <More label={MORE.about}>
+                  {t.about.paragraphs.slice(1).map((p, i) => (
+                    <p key={i} data-rise style={d(i + 2)}>
+                      {p}
+                    </p>
+                  ))}
+                </More>
               </div>
               <ul className="v5-facts" data-rise>
                 {t.about.facts.map((f) => (
@@ -369,13 +483,22 @@ export function App() {
             {t.work.intro}
           </p>
           <div className="v5-list">
-            {t.work.points.map((p, i) => (
+            {t.work.points.slice(0, 1).map((p, i) => (
               <article className="v5-row" key={p.title} data-rise style={d(i)}>
                 <span className="v5-row__rule" aria-hidden="true" />
                 <h3 className="v5-row__title">{p.title}</h3>
                 <p className="v5-row__text">{p.text}</p>
               </article>
             ))}
+            <More label={MORE.work}>
+              {t.work.points.slice(1).map((p, i) => (
+                <article className="v5-row" key={p.title} data-rise style={d(i + 1)}>
+                  <span className="v5-row__rule" aria-hidden="true" />
+                  <h3 className="v5-row__title">{p.title}</h3>
+                  <p className="v5-row__text">{p.text}</p>
+                </article>
+              ))}
+            </More>
           </div>
         </section>
 
@@ -388,12 +511,30 @@ export function App() {
             {t.benefits.intro}
           </p>
           <div className="v5-benefits">
-            {t.benefits.items.map((item, i) => (
-              <article className="v5-benefit" key={item.title} data-rise style={d(i)}>
+            {t.benefits.items.slice(0, 1).map((item, i) => (
+              <article
+                className="v5-benefit"
+                key={item.title}
+                data-rise
+                style={{ ...d(i), ...indent(i) }}
+              >
                 <h3 className="v5-benefit__title">{item.title}</h3>
                 <p className="v5-benefit__text">{item.text}</p>
               </article>
             ))}
+            <More label={MORE.benefits}>
+              {t.benefits.items.slice(1).map((item, i) => (
+                <article
+                  className="v5-benefit"
+                  key={item.title}
+                  data-rise
+                  style={{ ...d(i + 1), ...indent(i + 1) }}
+                >
+                  <h3 className="v5-benefit__title">{item.title}</h3>
+                  <p className="v5-benefit__text">{item.text}</p>
+                </article>
+              ))}
+            </More>
           </div>
         </section>
 
@@ -407,11 +548,13 @@ export function App() {
               {t.space.lead}
             </p>
             <div className="v5-prose v5-space__prose">
-              {t.space.paragraphs.map((p, i) => (
-                <p key={i} data-rise style={d(i)}>
-                  {p}
-                </p>
-              ))}
+              <More label={MORE.space}>
+                {t.space.paragraphs.map((p, i) => (
+                  <p key={i} data-rise style={d(i)}>
+                    {p}
+                  </p>
+                ))}
+              </More>
             </div>
           </div>
           <p className="v5-huge" data-rise>
@@ -430,20 +573,22 @@ export function App() {
           <p className="v5-session__format" data-rise style={d(2)}>
             {t.session.format}
           </p>
-          <h3 className="v5-session__sub" data-rise>
-            {t.session.structureTitle}
-          </h3>
-          <div className="v5-structure">
-            {t.session.structure.map((s, i) => (
-              <div className="v5-structure__item" key={s.title} data-rise style={d(i)}>
-                <h4>{s.title}</h4>
-                <p>{s.text}</p>
-              </div>
-            ))}
-          </div>
-          <p className="v5-note" data-rise>
-            {t.session.frequencyNote}
-          </p>
+          <More label={MORE.session}>
+            <h3 className="v5-session__sub" data-rise>
+              {t.session.structureTitle}
+            </h3>
+            <div className="v5-structure">
+              {t.session.structure.map((s, i) => (
+                <div className="v5-structure__item" key={s.title} data-rise style={d(i)}>
+                  <h4>{s.title}</h4>
+                  <p>{s.text}</p>
+                </div>
+              ))}
+            </div>
+            <p className="v5-note" data-rise>
+              {t.session.frequencyNote}
+            </p>
+          </More>
         </section>
 
         {/* ---------------------------------------------- PRIMEIRA SESSÃO */}
@@ -454,11 +599,16 @@ export function App() {
                 {t.first.title}
               </h2>
               <div className="v5-prose">
-                {t.first.paragraphs.map((p, i) => (
-                  <p key={i} className={i === 0 ? 'v5-lead' : undefined} data-rise style={d(i)}>
-                    {p}
-                  </p>
-                ))}
+                <p className="v5-lead" data-rise>
+                  {t.first.paragraphs[0]}
+                </p>
+                <More label={MORE.first}>
+                  {t.first.paragraphs.slice(1).map((p, i) => (
+                    <p key={i} data-rise style={d(i + 1)}>
+                      {p}
+                    </p>
+                  ))}
+                </More>
               </div>
               <div className="v5-first__actions" data-rise>
                 <PrimaryCta />
@@ -516,14 +666,7 @@ export function App() {
           </p>
           <div className="v5-closing__actions" data-rise style={d(2)}>
             <PrimaryCta />
-            <a
-              className="v5-btn v5-btn--ghost"
-              href={CONTACT.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t.cta.instagram}
-            </a>
+            <InstagramCta />
           </div>
           <p className="v5-closing__note" data-rise style={d(3)}>
             {t.cta.note}

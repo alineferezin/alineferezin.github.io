@@ -1,17 +1,24 @@
 /**
  * Proposta V3 — "Consultório".
  *
- * Desktop: split. Foto fixa à esquerda (a "porta" do consultório), conteúdo rola
- * à direita numa coluna única, com uma barra de seções grudada no topo.
- * Mobile: a mesma placa vira hero de tela cheia, e a barra de seções gruda no
- * topo depois dela. O CTA fica sempre à mão (na placa no desktop, numa barra
- * fixa embaixo no mobile).
+ * Desktop (≥1024px): split. Foto fixa à esquerda (a "porta" do consultório), conteúdo
+ * rola à direita numa coluna única, com uma barra de seções grudada no topo. Intocado.
  *
- * Navegação = âncoras reais + scroll-spy (todo o conteúdo sempre no DOM e
- * alcançável por rolagem e por teclado — nada escondido atrás de estado).
+ * Mobile: a placa NÃO é mais 100dvh. Ela é uma foto de altura contida (o rosto nunca
+ * fica atrás de texto) + uma faixa verde sólida com a identidade. Sobra viewport pro
+ * começo do conteúdo aparecer embaixo — é essa "espiada" que diz que dá pra rolar.
+ * O CTA mora numa barra fixa na zona do polegar; a ação secundária (Instagram) vira
+ * só o ícone.
+ *
+ * Divulgação progressiva: nos blocos longos, o mobile mostra a abertura e guarda o
+ * resto atrás de um "Saiba mais" (botão + aria-expanded; o conteúdo continua no DOM).
+ * A partir de 768px o botão some e tudo fica aberto — o desktop lê como sempre leu.
+ *
+ * Navegação = âncoras reais + scroll-spy geométrico, recalculado por ResizeObserver
+ * (abrir/fechar um "Saiba mais" muda as alturas — a barra não pode mentir).
  */
-import { useEffect, useRef, useState } from 'react'
-import { getContent } from '../../i18n'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { getContent, getLang, type Lang } from '../../i18n'
 import { CONTACT, CREDENTIALS } from '../../config'
 import { PHOTOS, type Photo } from '../../shared/photos'
 import './v3.css'
@@ -42,6 +49,37 @@ const SPY: [string, NavKey][] = [
   ['faq', 'faq'],
   ['closing', 'contact'],
 ]
+
+type MoreKey = 'change' | 'about' | 'work' | 'benefits' | 'space' | 'session' | 'first'
+
+/**
+ * Rótulos dos botões de "Saiba mais" — cada um diz o que abre.
+ *
+ * NOTA: isto é microcopy de CONTROLE (rótulo de botão), não copy da Aline; a copy dela
+ * continua 100% em content/pt.ts. Ficam aqui porque content/ é compartilhado pelas 5
+ * propostas e esta sessão só pode tocar em versions/v3/. Quando a V3 for a escolhida,
+ * promover para `pt.ts`/`en.ts` (ex.: `more: { change: '…' }`).
+ */
+const MORE: Record<Lang, Record<MoreKey, string>> = {
+  pt: {
+    change: 'Saiba mais sobre a mudança',
+    about: 'Saiba mais sobre mim',
+    work: 'Saiba mais sobre a abordagem',
+    benefits: 'Ver todos os benefícios',
+    space: 'Saiba mais sobre o vínculo',
+    session: 'Ver a estrutura da sessão',
+    first: 'Saiba mais sobre a primeira sessão',
+  },
+  en: {
+    change: 'More about change',
+    about: 'More about me',
+    work: 'More about the approach',
+    benefits: 'See all the benefits',
+    space: 'More about the bond',
+    session: 'See how a session runs',
+    first: 'More about the first session',
+  },
+}
 
 /**
  * `priority`: 'high' = hero (eager, prioritário); 'low' = carrega junto, mas por
@@ -79,36 +117,132 @@ function Img({
   )
 }
 
+function InstagramIcon() {
+  return (
+    <svg
+      className="ig"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5.2" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.3" cy="6.7" r="1.15" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+/** Botão de divulgação progressiva. Some no ≥768px (lá o conteúdo já está aberto). */
+function MoreButton({
+  controls,
+  label,
+  open,
+  onClick,
+}: {
+  controls: string
+  label: string
+  open: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      className="more__btn"
+      type="button"
+      aria-expanded={open}
+      aria-controls={controls}
+      onClick={onClick}
+    >
+      <span>{label}</span>
+    </button>
+  )
+}
+
+/** Abertura visível + resto dobrado. O resto NUNCA sai do DOM. */
+function More({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={open ? 'more is-open' : 'more'}>
+      <MoreButton controls={id} label={label} open={open} onClick={() => setOpen((o) => !o)} />
+      <div className="more__rest" id={id}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export function App() {
-  const t = getContent()
+  const lang = getLang()
+  const t = getContent(lang)
+  const more = MORE[lang]
   const whatsappHref = CONTACT.whatsapp(t.cta.whatsappMessage)
 
   const [active, setActive] = useState<NavKey>('about')
+  const activeRef = useRef<NavKey>('about')
+  const panelRef = useRef<HTMLElement>(null)
   const navListRef = useRef<HTMLUListElement>(null)
   const navItemRefs = useRef<Partial<Record<NavKey, HTMLAnchorElement | null>>>({})
 
-  /* Scroll-spy: root = viewport (funciona igual com o painel rolando por dentro). */
-  useEffect(() => {
-    const ids = SPY.map(([id]) => id)
-    const els = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null)
-    const visible = new Set<string>()
+  /* Listas que o mobile corta (ver CSS `.is-clamped`). */
+  const [workOpen, setWorkOpen] = useState(false)
+  const [benefitsOpen, setBenefitsOpen] = useState(false)
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) visible.add(e.target.id)
-          else visible.delete(e.target.id)
-        }
-        const first = SPY.find(([id]) => visible.has(id))
-        if (first) setActive(first[1])
-      },
-      { rootMargin: '-35% 0px -55% 0px', threshold: 0 },
-    )
-    els.forEach((el) => io.observe(el))
-    return () => io.disconnect()
+  /**
+   * Scroll-spy geométrico: quem foi a última seção a cruzar a linha de leitura.
+   * Ler a geometria na hora (em vez de guardar estado de interseção) é o que faz
+   * isso sobreviver a mudança de altura — abrir um "Saiba mais" empurra tudo pra
+   * baixo, e o ResizeObserver abaixo manda recalcular.
+   */
+  const computeActive = useCallback(() => {
+    const line = window.innerHeight * 0.35
+    let current: NavKey = SPY[0][1]
+    for (const [id, key] of SPY) {
+      const el = document.getElementById(id)
+      if (el && el.getBoundingClientRect().top - 1 <= line) current = key
+    }
+    if (current !== activeRef.current) {
+      activeRef.current = current
+      setActive(current)
+    }
   }, [])
+
+  useEffect(() => {
+    let raf = 0
+    const schedule = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        computeActive()
+      })
+    }
+    schedule()
+
+    /* No mobile rola a janela; no desktop rola o painel. Escutamos os dois. */
+    const panel = panelRef.current
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    panel?.addEventListener('scroll', schedule, { passive: true })
+
+    /* Mudou de altura (abriu/fechou um "Saiba mais", fonte carregou, girou a tela)? Recalcula. */
+    const ro = new ResizeObserver(schedule)
+    if (panel) ro.observe(panel)
+    for (const [id] of SPY) {
+      const el = document.getElementById(id)
+      if (el) ro.observe(el)
+    }
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      panel?.removeEventListener('scroll', schedule)
+      ro.disconnect()
+    }
+  }, [computeActive])
 
   /* Mantém o item ativo visível na barra rolável (só na horizontal). */
   useEffect(() => {
@@ -152,7 +286,7 @@ export function App() {
         {t.a11y.skipToContent}
       </a>
 
-      {/* A placa: foto + identidade + CTA. Fixa à esquerda no desktop, hero no mobile. */}
+      {/* A placa: foto + identidade. Overlay fixo no desktop; foto + faixa no mobile. */}
       <header className="plate">
         <Img
           photo={PHOTOS.retrato}
@@ -195,7 +329,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="panel" id="conteudo" tabIndex={-1}>
+      <main className="panel" id="conteudo" tabIndex={-1} ref={panelRef}>
         {/* Nav único da página: não precisa de aria-label (não há outro pra desambiguar). */}
         <nav className="secnav">
           <ul className="secnav__list" ref={navListRef}>
@@ -228,20 +362,25 @@ export function App() {
             {t.change.title}
           </h2>
           <div className="prose">
-            {t.change.paragraphs.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
+            <p>{t.change.paragraphs[0]}</p>
           </div>
-          <p className="change__question">{t.change.question}</p>
-          <div className="change__steps">
-            <p className="change__intro">{t.change.stepsIntro}</p>
-            <ul className="ticks">
-              {t.change.steps.map((s) => (
-                <li key={s}>{s}</li>
+          <More id="change-more" label={more.change}>
+            <div className="prose prose--cont">
+              {t.change.paragraphs.slice(1).map((p) => (
+                <p key={p}>{p}</p>
               ))}
-            </ul>
-            <p className="change__outro">{t.change.stepsOutro}</p>
-          </div>
+            </div>
+            <p className="change__question">{t.change.question}</p>
+            <div className="change__steps">
+              <p className="change__intro">{t.change.stepsIntro}</p>
+              <ul className="ticks">
+                {t.change.steps.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ul>
+              <p className="change__outro">{t.change.stepsOutro}</p>
+            </div>
+          </More>
         </section>
 
         <section className="block" id="about" data-reveal aria-labelledby="about-h">
@@ -251,9 +390,12 @@ export function App() {
           <p className="about__role">{t.about.role}</p>
           <div className="about__body">
             <div className="prose">
-              {t.about.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              <p>{t.about.paragraphs[0]}</p>
+              <More id="about-more" label={more.about}>
+                {t.about.paragraphs.slice(1).map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </More>
             </div>
             <Img
               photo={PHOTOS.palestra}
@@ -277,7 +419,8 @@ export function App() {
             {t.work.title}
           </h2>
           <p className="lead">{t.work.intro}</p>
-          <ul className="rows">
+          {/* A lista inteira fica no DOM; o mobile fechado mostra só o primeiro ponto. */}
+          <ul className={workOpen ? 'rows' : 'rows is-clamped'} id="work-rows">
             {t.work.points.map((p) => (
               <li className="row" key={p.title}>
                 <h3>{p.title}</h3>
@@ -285,6 +428,12 @@ export function App() {
               </li>
             ))}
           </ul>
+          <MoreButton
+            controls="work-rows"
+            label={more.work}
+            open={workOpen}
+            onClick={() => setWorkOpen((o) => !o)}
+          />
         </section>
 
         <section className="block" id="benefits" data-reveal aria-labelledby="benefits-h">
@@ -292,7 +441,7 @@ export function App() {
             {t.benefits.title}
           </h2>
           <p className="lead">{t.benefits.intro}</p>
-          <div className="benefits">
+          <div className={benefitsOpen ? 'benefits' : 'benefits is-clamped'} id="benefits-list">
             {t.benefits.items.map((i) => (
               <div className="benefit" key={i.title}>
                 <h3>{i.title}</h3>
@@ -300,6 +449,12 @@ export function App() {
               </div>
             ))}
           </div>
+          <MoreButton
+            controls="benefits-list"
+            label={more.benefits}
+            open={benefitsOpen}
+            onClick={() => setBenefitsOpen((o) => !o)}
+          />
         </section>
 
         <section className="block block--dark space" id="space" data-reveal aria-labelledby="space-h">
@@ -308,12 +463,14 @@ export function App() {
               {t.space.title}
             </h2>
             <p className="space__lead">{t.space.lead}</p>
-            <div className="prose">
-              {t.space.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
-            </div>
-            <p className="space__highlight">{t.space.highlight}</p>
+            <More id="space-more" label={more.space}>
+              <div className="prose">
+                {t.space.paragraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </div>
+              <p className="space__highlight">{t.space.highlight}</p>
+            </More>
           </div>
           <Img
             photo={PHOTOS.sorriso}
@@ -330,16 +487,18 @@ export function App() {
           </h2>
           <p className="lead">{t.session.lead}</p>
           <p className="session__format">{t.session.format}</p>
-          <h3 className="session__structure-title">{t.session.structureTitle}</h3>
-          <ol className="rail">
-            {t.session.structure.map((s) => (
-              <li key={s.title}>
-                <p className="rail__title">{s.title}</p>
-                <p className="rail__text">{s.text}</p>
-              </li>
-            ))}
-          </ol>
-          <p className="fineprint">{t.session.frequencyNote}</p>
+          <More id="session-more" label={more.session}>
+            <h3 className="session__structure-title">{t.session.structureTitle}</h3>
+            <ol className="rail">
+              {t.session.structure.map((s) => (
+                <li key={s.title}>
+                  <p className="rail__title">{s.title}</p>
+                  <p className="rail__text">{s.text}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="fineprint">{t.session.frequencyNote}</p>
+          </More>
         </section>
 
         <section className="block block--first" id="first" data-reveal aria-labelledby="first-h">
@@ -347,9 +506,12 @@ export function App() {
             {t.first.title}
           </h2>
           <div className="prose">
-            {t.first.paragraphs.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
+            <p>{t.first.paragraphs[0]}</p>
+            <More id="first-more" label={more.first}>
+              {t.first.paragraphs.slice(1).map((p) => (
+                <p key={p}>{p}</p>
+              ))}
+            </More>
           </div>
         </section>
 
@@ -400,7 +562,8 @@ export function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              {t.cta.instagram}
+              <InstagramIcon />
+              <span>{t.cta.instagram}</span>
             </a>
           </div>
           <p className="closing__note">{t.cta.note}</p>
@@ -428,7 +591,7 @@ export function App() {
         </footer>
       </main>
 
-      {/* Mobile: o CTA nunca sai da mão. */}
+      {/* Mobile: o CTA nunca sai da mão. A ação secundária é só o ícone. */}
       <div className="bar">
         <a
           className="btn btn--primary"
@@ -439,12 +602,13 @@ export function App() {
           {t.cta.primary}
         </a>
         <a
-          className="btn btn--ghost"
+          className="bar__icon"
           href={CONTACT.instagramUrl}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={t.cta.instagram}
         >
-          {t.footer.instagram}
+          <InstagramIcon />
         </a>
       </div>
     </div>

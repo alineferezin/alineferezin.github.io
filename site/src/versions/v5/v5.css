@@ -26,7 +26,8 @@
   --rule-paper: oklch(0.73 0.03 133 / 0.55);
 
   --pad-x: clamp(1.25rem, 5vw, 3.5rem);
-  --header-h: 4rem;
+  /* Cada rem de barra é um rem a menos de cartaz na tela do iPhone SE. */
+  --header-h: 3.5rem;
   --measure: 62ch;
 
   background: var(--deep);
@@ -124,6 +125,11 @@
   transform-origin: left;
 }
 
+@media (min-width: 768px) {
+  .v5 {
+    --header-h: 4rem;
+  }
+}
 @media (min-width: 960px) {
   .v5 {
     --header-h: 4.75rem;
@@ -195,12 +201,174 @@
   background: rgb(0 0 0 / 0.05);
 }
 
+/* Ação secundária no celular: SÓ O ÍCONE. Círculo de 56px (alvo bem acima dos
+   44px), texto só a partir do tablet. O nome nunca some do leitor de tela — o
+   <a> carrega `aria-label`. */
+.v5-btn--icon {
+  width: 56px;
+  min-width: 56px;
+  padding: 0;
+}
+.v5-btn__label {
+  display: none;
+}
+@media (min-width: 768px) {
+  .v5-btn--icon {
+    width: auto;
+    min-width: 0;
+    padding: 1rem 1.75rem;
+  }
+  .v5-btn__label {
+    display: inline;
+  }
+}
+
+/* --------------------------------------- "SAIBA MAIS" (divulgação progressiva)
+
+   Só existe no CELULAR. O conteúdo NUNCA sai do DOM: fechado, o corpo tem altura
+   zero (grid 0fr) e `visibility: hidden` — some da árvore de acessibilidade e do
+   tab order, mas continua no HTML, indexável.
+
+   A partir de 768px o botão desaparece e a cadeia vira `display: contents`: os
+   filhos voltam a ser filhos diretos de `.v5-prose` / `.v5-list` / `.v5-benefits`
+   / `.v5-band`, exatamente como antes do <More> existir. É por isso que o
+   desktop não muda uma vírgula.
+   ========================================================================== */
+
+.v5-more__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  min-height: 48px;
+  margin-top: var(--space-m);
+  padding: 0.5rem 1.15rem;
+  border: 2px solid;
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.35s var(--ease-out-expo);
+}
+/* O <More> traz o próprio respiro: sem isto ele somaria com o `> * + *` da prosa. */
+.v5-prose > .v5-more {
+  margin-top: 0;
+}
+/* Abre o bloco (nada visível antes dele): não precisa de respiro nenhum. */
+.v5-more:first-child .v5-more__toggle {
+  margin-top: 0;
+}
+.v5-band--paper .v5-more__toggle {
+  color: var(--warm-paper); /* marrom escuro sobre o verde claríssimo */
+  border-color: var(--warm-display);
+}
+.v5-band--paper .v5-more__toggle:hover {
+  background: rgb(0 0 0 / 0.05);
+}
+.v5-band--deep .v5-more__toggle {
+  color: var(--warm-deep); /* marrom claro sobre o verde profundo */
+  border-color: var(--warm-deep);
+}
+.v5-band--deep .v5-more__toggle:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* O mesmo sinal do FAQ — o gesto de "abrir" é um só no site inteiro. */
+.v5-more__sign {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.v5-more__sign::before,
+.v5-more__sign::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 2px;
+  background: currentColor;
+}
+.v5-more__sign::after {
+  transform: rotate(90deg);
+}
+.v5-more.is-open .v5-more__sign {
+  transform: rotate(135deg);
+}
+
+/* Abre com o grid 0fr→1fr; sem suporte a transição, só aparece. */
+.v5-more__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.55s var(--ease-out-expo);
+}
+.v5-more.is-open .v5-more__body {
+  grid-template-rows: 1fr;
+}
+/* O respiro vive no estado ABERTO: `padding` numa caixa `border-box` sobrevive
+   ao 0fr (ficava um vão fantasma de 24px embaixo do botão, fechado). */
+.v5-more__inner {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+.v5-more.is-open .v5-more__inner {
+  visibility: visible;
+  padding-top: var(--space-m);
+}
+.v5-more__inner > * + * {
+  margin-top: var(--space-m);
+}
+/* Listas e benefícios se seguram pelas bordas, não por margem. */
+.v5-list .v5-more__inner > * + *,
+.v5-benefits .v5-more__inner > * + * {
+  margin-top: 0;
+}
+/* <More> filho direto da banda (a sessão): no desktop os FILHOS é que viram
+   itens do grid da banda — sem isto cairiam na coluna da margem. */
+.v5-band > .v5-more .v5-more__inner > * {
+  grid-column: content;
+}
+
+@media (min-width: 768px) {
+  .v5-more,
+  .v5-more__body,
+  .v5-more__inner {
+    display: contents;
+  }
+  /* `display: contents` não gera caixa, MAS `visibility` continua herdando por
+     ela — sem isto o desktop inteiro ficava com o conteúdo colapsado invisível. */
+  .v5-more__inner {
+    visibility: visible;
+  }
+  .v5-more__toggle {
+    display: none;
+  }
+  /* `display: contents` não gera caixa: as margens do wrapper somem, então quem
+     precisa de respiro é o primeiro filho — e só na prosa, e só quando há algo
+     antes dele (em "Nosso espaço" o <More> abre a prosa: ali não sobra margem). */
+  .v5-prose > .v5-more:not(:first-child) .v5-more__inner > :first-child {
+    margin-top: var(--space-m);
+  }
+}
+
 /* ------------------------------------------------- HERÓI: CARTAZ TIPOGRÁFICO
 
    A primeira dobra da V5 NÃO tem foto: é palavra sobre verde profundo, em
    escala de pôster. O retrato entra logo abaixo, inteiro, numa banda
    full-bleed (.v5-plate). No mobile o herói ocupa a tela toda — por isso a
    banda nunca aparece como uma fatia cortada no rodapé.
+
+   CARTAZ DE CELULAR ≠ CARTAZ DE DESKTOP ENCOLHIDO. O que faz o pôster é a
+   PROPORÇÃO (3 linhas empilhadas, entrelinha rente, medida curta), não o
+   tamanho absoluto. Num iPhone SE (375×667) — e ainda mais no 320×568 — um
+   título de 7rem come a tela e empurra o CTA pra fora da dobra. Então a escala
+   do display é medida contra a ALTURA DA DOBRA, não contra a largura: até
+   767px o cartaz roda entre 2.4rem e 3.4rem, e o desktop (≥768px) recebe de
+   volta, intacta, a escala de pôster de sempre.
    ========================================================================== */
 
 .v5-hero {
@@ -209,8 +377,13 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: calc(var(--header-h) + var(--space-l)) var(--pad-x) var(--space-l);
+  padding: calc(var(--header-h) + var(--space-s)) var(--pad-x) var(--space-s);
   background: var(--deep);
+}
+@media (min-width: 768px) {
+  .v5-hero {
+    padding: calc(var(--header-h) + var(--space-l)) var(--pad-x) var(--space-l);
+  }
 }
 
 .v5-hero__inner {
@@ -231,13 +404,15 @@
   color: var(--warm-deep);
 }
 
-/* Quebra de linha intencional: a medida em ch empilha o título em 2–3 linhas
-   ("Você está / no lugar / certo.") — cartaz, não manchete de landing. */
+/* Quebra de linha intencional: a medida em ch empilha o título em 3 linhas
+   ("Você está / no lugar / certo.") — cartaz, não manchete de landing. A medida
+   em ch é a mesma no celular e no desktop: é ELA que mantém o gesto do pôster
+   quando o corpo do tipo encolhe. */
 .v5-hero__title {
-  margin-top: var(--space-m);
-  font-size: clamp(3.4rem, 2.05rem + 6.6vw, 7rem);
-  line-height: 0.96;
-  letter-spacing: -0.045em;
+  margin-top: var(--space-s);
+  font-size: clamp(2.4rem, 0.78rem + 8.1vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
   color: var(--white);
   max-width: 11ch;
   text-wrap: normal; /* sobrescreve o `balance` do reset: quebra previsível */
@@ -245,13 +420,30 @@
 
 /* Deslocado para a direita no desktop — a assimetria é o gesto do cartaz. */
 .v5-hero__subhead {
-  margin-top: var(--space-l);
+  margin-top: var(--space-m);
   font-family: var(--font-display);
-  font-size: clamp(1.45rem, 1rem + 2vw, 2.5rem);
-  line-height: 1.24;
-  letter-spacing: -0.025em;
+  font-size: clamp(1.2rem, 0.95rem + 1.25vw, 1.45rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   color: var(--on-deep-soft);
-  max-width: 21ch;
+  max-width: 28ch;
+}
+
+/* ≥768px: a escala de pôster de sempre, sem um pixel de diferença. */
+@media (min-width: 768px) {
+  .v5-hero__title {
+    margin-top: var(--space-m);
+    font-size: clamp(3.4rem, 2.05rem + 6.6vw, 7rem);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+  .v5-hero__subhead {
+    margin-top: var(--space-l);
+    font-size: clamp(1.45rem, 1rem + 2vw, 2.5rem);
+    line-height: 1.24;
+    letter-spacing: -0.025em;
+    max-width: 21ch;
+  }
 }
 
 /* "corajoso" — a tese da versão. Mesmo tratamento da ênfase da citação. */
@@ -280,22 +472,67 @@
 /* Rodapé do cartaz: a linha de meta (o que é + como falar). */
 .v5-hero__meta {
   display: grid;
-  gap: var(--space-l);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-m);
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+  padding-top: var(--space-s);
   border-top: 1px solid var(--rule-deep);
 }
 
 .v5-hero__tagline {
   max-width: 42ch;
-  font-size: var(--step-0);
+  font-size: var(--step--1);
   color: var(--on-deep-soft);
 }
 
 .v5-hero__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-s);
+}
+
+/* A ação secundária do herói, no celular, é um LINK — não uma segunda pílula.
+   Duas pílulas de 56px empilhadas eram 128px de dobra gastos com um botão que
+   ninguém aperta primeiro. Alvo de toque continua ≥ 44px. */
+/* `.v5-hero .v5-btn--ghost` (0,2,0) já pinta a borda — precisa de par a par. */
+.v5-hero .v5-hero__link {
+  min-height: 44px;
+  padding: 0.5rem 0;
+  border-color: transparent;
+  background: none;
+  font-size: var(--step--1);
+  text-decoration: underline;
+  text-decoration-color: var(--warm-display);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+.v5-hero .v5-hero__link:hover {
+  background: none;
+  border-color: transparent;
+  transform: none;
+}
+
+@media (min-width: 768px) {
+  .v5-hero__meta {
+    gap: var(--space-l);
+    margin-top: var(--space-xl);
+    padding-top: var(--space-m);
+  }
+  .v5-hero__tagline {
+    font-size: var(--step-0);
+  }
+  .v5-hero .v5-hero__link {
+    min-height: 56px;
+    padding: 1rem 1.75rem;
+    border-color: rgb(255 255 255 / 0.55);
+    font-size: var(--step-0);
+    text-decoration: none;
+  }
+  .v5-hero .v5-hero__link:hover {
+    background: rgb(255 255 255 / 0.1);
+    border-color: currentColor;
+    transform: translateY(-2px);
+  }
 }
 
 .v5-scroll {
@@ -729,7 +966,9 @@
   max-width: 48ch;
   color: var(--on-deep-soft);
 }
-/* Quebra de grade intencional: cada item entra um pouco mais pra dentro. */
+/* Quebra de grade intencional: cada item entra um pouco mais pra dentro.
+   O degrau vem de `--indent` (índice real do item), não de :nth-child(): com os
+   itens 2 e 3 embrulhados no <More> do celular, o nth-child contaria errado. */
 @media (min-width: 900px) {
   .v5-benefit {
     display: grid;
@@ -737,16 +976,11 @@
     gap: clamp(2rem, 5vw, 5rem);
     align-items: end;
     padding-block: var(--space-xl);
+    padding-left: calc(var(--indent, 0) * 8%);
   }
   .v5-benefit__text {
     margin-top: 0;
     padding-bottom: 0.4rem;
-  }
-  .v5-benefit:nth-child(2) {
-    padding-left: 8%;
-  }
-  .v5-benefit:nth-child(3) {
-    padding-left: 16%;
   }
 }
 
@@ -898,11 +1132,14 @@
 
 /* ---------------------------------------------------- O CLÍMAX: A CITAÇÃO */
 
+/* A citação NÃO colapsa: ela é o clímax, não um parágrafo. Mas em 320×568 o
+   corpo antigo (2.3rem) dava NOVE linhas — um paredão. Aqui ela desce a 1.9rem
+   no celular, cabe inteira na tela curta, e ≥768px volta à escala de sempre. */
 .v5-quote {
   display: grid;
   place-items: center;
   min-height: 100svh;
-  padding: var(--space-2xl) var(--pad-x);
+  padding: var(--space-xl) var(--pad-x);
   background: var(--deep);
   color: var(--white);
 }
@@ -913,12 +1150,22 @@
 }
 .v5-quote__text {
   font-family: var(--font-display);
-  font-size: clamp(2.3rem, 1.15rem + 5vw, 5.5rem);
-  line-height: 1.12;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.9rem, 1.2rem + 3.5vw, 2.6rem);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
   color: var(--white);
   max-width: 20ch;
   text-wrap: pretty;
+}
+@media (min-width: 768px) {
+  .v5-quote {
+    padding-block: var(--space-2xl);
+  }
+  .v5-quote__text {
+    font-size: clamp(2.3rem, 1.15rem + 5vw, 5.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+  }
 }
 /* Palavras sobem escalonadas — SÓ transform: sem o observer, seguem legíveis. */
 .v5-quote__w {
