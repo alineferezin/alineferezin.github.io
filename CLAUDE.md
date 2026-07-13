@@ -28,7 +28,14 @@ layout; herdar o nível de acabamento e o toolkit.
    promover a escolhida pra raiz `/`.
 4. **Português** é a língua principal (ela é BR, atende em PT). Bilíngue PT/EN é
    opcional — perguntar antes.
-5. Estático puro (HTML/CSS/JS), sem build, sem backend. Paths relativos.
+5. **Stack em aberto** — a próxima sessão escolhe (React/Vite, Astro, ou
+   HTML/CSS/JS puro; o Silas curte algo "meio React"). Sem backend. Só cuidar
+   que o **GitHub Pages** serve estático: framework → configurar export estático
+   + workflow de deploy (ou publicar o build). Paths relativos.
+
+> **Nota:** esta sessão inicial deixou **só a base (docs)** e um `index.html`
+> **placeholder neutro** (sem marca aplicada, de propósito). O design/stack é
+> trabalho da próxima sessão — não fui eu que apliquei nada visual.
 
 ## Quem é a Aline (extraído dos materiais dela)
 
@@ -44,17 +51,16 @@ layout; herdar o nível de acabamento e o toolkit.
   mesma"*, *"Psicoterapia para adultos online, com segurança e cuidado"*.
 - CTA principal do site atual: **"Vamos conversar?"**.
 
-## Marca observada (nos materiais — confirmar/evoluir com ela)
+## Marca
 
-- **Paleta**: verde sálvia/oliva (fundo dominante), marrom/terracota quente,
-  azul acinzentado (accent), creme/off-white. Uma paleta calma e terrosa.
-- **Tipografia**: display **serifada** (elegante, humana). O site atual usa uma
-  serifada com peso, títulos grandes.
-- Identidade já existe (logo "Aline Ferezin", monograma "a"). **Preservar a
-  identidade** dela vale mais que reinventar — as propostas variam a
-  composição/tratamento, não jogam a marca fora. Cuidado com o clichê
-  cream+serifada de "wellness/terapia" (é o default de IA da categoria); dar um
-  ponto de vista próprio.
+Identidade oficial (paleta exata + fontes) fornecida pela Aline está em
+**`docs/BRAND.md`** — usar como fonte de verdade. Resumo: verde escuro `#67735c`
+principal, verdes/marrons/azul de apoio, branco/cinza pra texto; fontes **Alice**
+(títulos), **TAN Headline** (títulos 2, paga — pedir à Aline), **Montserrat**
+(corpo). A identidade já existe (logo, monograma "a", curvas orgânicas, fotos) —
+**preservar**; as propostas variam composição/tratamento, não descartam a marca.
+Cuidado com o clichê de IA da categoria wellness (bege + serifada itálica +
+folhinhas).
 
 ## Materiais da Aline
 
