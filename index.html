@@ -11,7 +11,14 @@
     <link rel="canonical" href="https://alineferezin.com/" />
     <meta name="theme-color" content="#67735c" />
 
-    <!-- Ao contrário das propostas em /mockup/, esta é a página pública: indexável. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Cartão de compartilhamento (WhatsApp, Instagram, LinkedIn, iMessage).
+         A URL da imagem PRECISA ser absoluta: o WhatsApp não resolve caminho
+         relativo. `npm run social` regenera og.jpg a partir da foto e das fontes
+         reais. -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="Aline Ferezin" />
@@ -21,7 +28,30 @@
       content="Psicoterapia para adultos, online e presencial, com segurança e cuidado."
     />
     <meta property="og:url" content="https://alineferezin.com/" />
+    <meta property="og:image" content="https://alineferezin.com/og.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Aline Ferezin, psicóloga clínica, ao lado da frase “Você está no lugar certo.”" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://alineferezin.com/og.jpg" />
+    <!-- Google entende quem ela é, onde atende e como falar com ela. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Psychologist",
+        "name": "Aline Ferezin dos Santos",
+        "alternateName": "Aline Ferezin",
+        "url": "https://alineferezin.com/",
+        "image": "https://alineferezin.com/og.jpg",
+        "description": "Psicóloga clínica especialista em Terapia Cognitivo-Comportamental. Psicoterapia para adultos, online e presencial.",
+        "telephone": "+351964987386",
+        "knowsLanguage": ["pt", "en"],
+        "areaServed": ["PT", "BR"],
+        "address": { "@type": "PostalAddress", "addressLocality": "Vila Nova de Gaia", "addressCountry": "PT" },
+        "sameAs": ["https://instagram.com/psialineferezin"]
+      }
+    </script>
     <script type="module" crossorigin src="../assets/index-CwRGTquh.js"></script>
     <link rel="stylesheet" crossorigin href="../assets/index-SAqR6SIY.css">
   </head>

@@ -14,7 +14,8 @@
     "photos": "node scripts/photos.mjs",
     "entries": "node scripts/entries.mjs",
     "shots": "node scripts/shots.mjs",
-    "promote": "node scripts/promote.mjs"
+    "promote": "node scripts/promote.mjs",
+    "social": "node scripts/social.mjs"
   },
   "dependencies": {
     "react": "^19.2.7",
