@@ -217,7 +217,14 @@ export function App() {
               <Cta />
               <InstagramCta />
             </div>
-            <p className="hero__scrollhint">{t.hero.scroll}</p>
+            {/* Deixa de rolagem: no celular é o que avisa que há mais abaixo —
+                e é clicável, não só decorativa. */}
+            <a className="hero__scrollhint" href="#mudar">
+              {t.hero.scroll}
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                <path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
           </div>
 
           <CurveFlow className="curve--hero" />
@@ -226,7 +233,7 @@ export function App() {
         <div ref={heroEnd} aria-hidden="true" />
 
         {/* -------------------------------------------------------- change */}
-        <section className="section section--deep change" aria-labelledby="change-t">
+        <section className="section section--deep change" id="mudar" aria-labelledby="change-t">
           {/* Grid nomeado: no desktop vira duas colunas sem trocar a ordem do DOM. */}
           <div className="wrap change__grid">
             <h2 className="h-display ga-title" id="change-t">

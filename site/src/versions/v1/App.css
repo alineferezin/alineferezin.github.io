@@ -205,11 +205,12 @@ body {
 
 .curve--hero {
   bottom: -1px;
-  z-index: 2;
-  height: 5rem; /* no celular o herói é curto: a curva alta subia por cima do CTA */
+  z-index: 0; /* atrás do texto: a curva é assinatura, não obstáculo */
+  height: 4rem; /* no celular o herói é curto: a curva alta subia por cima do CTA */
 }
 @media (min-width: 48rem) {
   .curve--hero {
+    z-index: 2;
     height: 9rem;
   }
 }
@@ -366,13 +367,17 @@ body {
    o rosto fica à direita e a fala à esquerda; nada disso muda. */
 
 .hero {
-  --hero-band: clamp(13rem, 44svh, 26rem); /* altura da faixa da foto */
+  /* A faixa da foto: quanto mais alta, MENOS a foto é recortada. A foto é 3:4;
+     numa faixa larga e baixa o `cover` corta o corpo dela fora. 52svh deixa o
+     enquadramento perto do retrato original — cabeça, mão no queixo e ombros. */
+  --hero-band: clamp(15rem, 52svh, 30rem);
 
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Reserva a faixa onde a curva vive — senão ela cruza a tagline. */
-  padding-bottom: 5.5rem;
+  /* Só o respiro da curva. Antes eram 5.5rem e sobrava um vão verde morto
+     embaixo do herói no celular. */
+  padding-bottom: var(--space-m);
   background: var(--deep);
   isolation: isolate;
 }
@@ -437,25 +442,28 @@ body {
 
 .hero__greeting {
   font-family: var(--font-display);
-  font-size: var(--step-1);
+  font-size: var(--step-0);
   line-height: 1.2;
   color: var(--warm-ink);
   margin-bottom: 0.25rem;
 }
 
+/* Escala própria do celular, medida contra a ALTURA da dobra e não contra a
+   largura: 30px no 320, 31px no 375, 33px no 414. O `--step-4` (40px no 375)
+   comia a dobra e empurrava foto e CTA. O desktop recupera o `--step-6`. */
 .hero__headline {
-  font-size: var(--step-4);
-  line-height: 1;
+  font-size: clamp(1.75rem, 1.25rem + 2.7vw, 2.25rem);
+  line-height: 1.05;
   color: var(--ink-strong);
-  max-width: 11ch;
+  max-width: 12ch;
 }
 
 .hero__subhead {
-  margin-top: var(--space-s);
-  font-size: var(--step-0);
+  margin-top: 0.6rem;
+  font-size: var(--step--1);
   line-height: 1.45;
   color: var(--ink-strong);
-  max-width: 30ch;
+  max-width: 32ch;
 }
 
 /* Desce para depois do CTA no celular (order): em tela curta a hierarquia é
@@ -463,8 +471,9 @@ body {
    abaixo — nada de `display: none`, nada some do DOM nem do leitor de tela. */
 .hero__tagline {
   order: 1;
-  margin-top: var(--space-m);
+  margin-top: 0.9rem;
   font-size: var(--step--1);
+  line-height: 1.4;
   color: var(--ink);
   max-width: 38ch;
 }
@@ -480,8 +489,46 @@ body {
   flex: 1 1 auto;
 }
 
+/* No celular a dobra termina aqui — sem esta deixa, nada avisa que há mais
+   página embaixo. É link de verdade (leva à seção "Por que é difícil mudar?"),
+   não enfeite. `order: 2` põe depois da tagline, no rodapé do herói. */
 .hero__scrollhint {
-  display: none;
+  order: 2;
+  align-self: flex-start;
+  position: relative;
+  z-index: 1; /* a curva passa por baixo, não por cima da frase */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  margin-top: var(--space-m);
+  padding: 0.5rem 1rem 0.5rem 0;
+  color: var(--ink);
+  font-size: var(--step--1);
+  text-decoration: none;
+}
+
+.hero__scrollhint svg {
+  color: var(--brown-300, var(--warm-ink));
+  animation: hero-nudge 2.4s var(--ease-out-quart) infinite;
+}
+
+@keyframes hero-nudge {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+  }
+  85% {
+    transform: translateY(3px);
+  }
+}
+
+/* A seta é a única coisa que se mexe: sem ela, a deixa continua legível. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__scrollhint svg {
+    animation: none;
+  }
 }
 
 @media (min-width: 48rem) {
@@ -530,12 +577,16 @@ body {
   .hero__tagline {
     text-shadow: 0 1px 16px oklch(0.34 0.028 133 / 0.85);
   }
+  /* Tudo que o celular encolheu volta ao tamanho de antes aqui. */
   .hero__greeting {
+    font-size: var(--step-1);
     line-height: 1.6;
     margin-bottom: var(--space-2xs);
   }
   .hero__headline {
     font-size: var(--step-6);
+    line-height: 1;
+    max-width: 11ch;
     text-shadow: 0 2px 30px oklch(0.34 0.028 133 / 0.55);
   }
   .hero__subhead {
@@ -558,12 +609,19 @@ body {
   }
   .hero__scrollhint {
     display: block;
+    order: 0;
+    min-height: 0;
     margin-top: var(--space-l);
     font-size: var(--step--1);
     letter-spacing: 0.06em;
     color: var(--ink);
-    padding-left: 2.2rem;
+    padding: 0 0 0 2.2rem;
     position: relative;
+  }
+  /* No desktop a deixa é o filete animado do ::before — a seta é coisa de
+     celular. Sem isto, o herói aprovado ganharia um ícone que não pediu. */
+  .hero__scrollhint svg {
+    display: none;
   }
   .hero__scrollhint::before {
     content: '';
