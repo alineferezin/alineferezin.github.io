@@ -11,6 +11,7 @@ import puppeteer from 'puppeteer-core'
 
 const base = (process.argv[2] || 'http://localhost:5190').replace(/\/$/, '')
 const OUT = 'mockup/portifolios/shots'
+const PREFIX = '/portifolios'
 mkdirSync(OUT, { recursive: true })
 
 const cacheDir = `${process.env.HOME}/.cache/puppeteer/chrome-headless-shell`
@@ -35,7 +36,7 @@ for (const v of ['v1', 'v2', 'v3', 'v4', 'v5']) {
   const page = await browser.newPage()
   // 16:10 — mesma proporção do card no seletor; só a primeira dobra.
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 })
-  await page.goto(`${base}/${v}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+  await page.goto(`${base}${PREFIX}/${v}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
   await new Promise((r) => setTimeout(r, 1500))
   await page.screenshot({ path: `${OUT}/${v}.png` })
   console.log(`✓ ${OUT}/${v}.png`)

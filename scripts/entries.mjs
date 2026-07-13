@@ -10,10 +10,10 @@ const VERSIONS = [
 ]
 
 for (const { id, name } of VERSIONS) {
-  mkdirSync(`site/${id}`, { recursive: true })
+  mkdirSync(`site/portifolios/${id}`, { recursive: true })
 
   writeFileSync(
-    `site/${id}/index.html`,
+    `site/portifolios/${id}/index.html`,
     `<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -33,13 +33,13 @@ for (const { id, name } of VERSIONS) {
   )
 
   writeFileSync(
-    `site/${id}/main.tsx`,
+    `site/portifolios/${id}/main.tsx`,
     `import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '../src/assets/fonts.css'
-import '../src/shared/tokens.css'
-import { applyLangToDocument } from '../src/i18n'
-import { App } from '../src/versions/${id}/App'
+import '../../src/assets/fonts.css'
+import '../../src/shared/tokens.css'
+import { applyLangToDocument } from '../../src/i18n'
+import { App } from '../../src/versions/${id}/App'
 
 applyLangToDocument()
 
@@ -50,5 +50,5 @@ createRoot(document.getElementById('root')!).render(
 )
 `,
   )
-  console.log(`✓ site/${id}/`)
+  console.log(`✓ site/portifolios/${id}/`)
 }

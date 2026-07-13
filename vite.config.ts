@@ -4,25 +4,28 @@ import { fileURLToPath } from 'node:url'
 
 const entry = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 
-// GitHub Pages serve estático da raiz do repo. As propostas são buildadas em
-// /mockup/portifolios/{v1..v5}/ e o `/` da raiz continua sendo o site publicado.
-// `base: './'` => todos os assets em caminho relativo (funciona em qualquer subpasta).
+// GitHub Pages serve estático da raiz do repo. A área de rascunhos é buildada
+// inteira em /mockup/ — o hub em /mockup/, as propostas em /mockup/portifolios/.
+// O `/` da raiz continua sendo o site publicado: o build não encosta nele.
+// `base: './'` => assets em caminho relativo, então o MESMO build serve em
+// alineferezin.com e em alineferezin.github.io, em qualquer profundidade.
 export default defineConfig({
   root: 'site',
   base: './',
   plugins: [react()],
   build: {
-    outDir: '../mockup/portifolios',
+    outDir: '../mockup',
     emptyOutDir: true,
     assetsInlineLimit: 0,
     rollupOptions: {
       input: {
-        index: entry('site/index.html'),
-        v1: entry('site/v1/index.html'),
-        v2: entry('site/v2/index.html'),
-        v3: entry('site/v3/index.html'),
-        v4: entry('site/v4/index.html'),
-        v5: entry('site/v5/index.html'),
+        hub: entry('site/index.html'),
+        portifolios: entry('site/portifolios/index.html'),
+        v1: entry('site/portifolios/v1/index.html'),
+        v2: entry('site/portifolios/v2/index.html'),
+        v3: entry('site/portifolios/v3/index.html'),
+        v4: entry('site/portifolios/v4/index.html'),
+        v5: entry('site/portifolios/v5/index.html'),
       },
     },
   },

@@ -10,8 +10,10 @@ backend, sem router: cada proposta é uma página estática independente.
 
 ```
 site/
-  index.html          # seletor de propostas (HTML puro, sem React)
-  v1/ … v5/           # uma entrada por proposta: index.html + main.tsx
+  index.html          # hub /mockup/ — a área de rascunhos (HTML puro, sem React)
+  portifolios/
+    index.html        # seletor das 5 propostas, com miniaturas
+    v1/ … v5/         # uma entrada por proposta: index.html + main.tsx
   src/
     content/pt.ts     # TODA a copy em português (fonte de verdade)
     content/en.ts     # tradução completa, tipada contra o PT
@@ -24,9 +26,13 @@ site/
     versions/v1..v5/  # o design de cada proposta (App.tsx + css)
 ```
 
-`npm run build` → `mockup/portifolios/{v1..v5}/`, com `base: './'` (paths
-relativos: funciona em qualquer subpasta do Pages). A raiz `/` do repo continua
-sendo o site publicado — **o build das propostas não toca nela**.
+`npm run build` → `mockup/` (hub) + `mockup/portifolios/{v1..v5}/` (propostas),
+com `base: './'` — paths relativos, então **o mesmo build serve em
+`alineferezin.com` e em `alineferezin.github.io`**, em qualquer profundidade.
+A raiz `/` do repo continua sendo o site publicado: **o build não toca nela**.
+
+Cuidado: `emptyOutDir` limpa `mockup/` a cada build — as miniaturas do seletor
+são regeneradas depois (`node scripts/thumbs.mjs`), não edite nada à mão lá.
 
 ## Regras que o sistema impõe
 
